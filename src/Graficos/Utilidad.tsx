@@ -95,13 +95,13 @@ export function TopProductsChart() {
         </div>
 
         {/* Contenedor del gráfico */}
-        <div className="flex-1 min-h-0">
-          <ChartContainer config={chartConfig}>
+        <div className="flex-1 h-full">
+          <ChartContainer config={chartConfig} className="w-full h-full">
             <BarChart
               accessibilityLayer
               data={chartData}
               layout="vertical"
-              margin={{ left: 0, right: 20 }}
+              margin={{ left: 0, right: 10 }}
               className="w-full h-full"
             >
               <YAxis
@@ -138,7 +138,7 @@ export function TopProductsChart() {
             ? "Productos más vendidos este mes"
             : "Productos con mayor utilidad este mes"}
         </div>
-        <div className="leading-none text-muted-foreground p-8">
+        <div className="leading-none text-muted-foreground p-3">
           Mostrando los 6 productos principales
         </div>
       </CardFooter>

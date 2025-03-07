@@ -57,23 +57,9 @@ export function BusinessActivityHeatmap() {
       <CardHeader className="flex justify-between items-center">
         <div className="flex flex-col">
           <CardTitle>Mapa de Calor de Actividad</CardTitle>
-        </div>
-        <div className="flex space-x-4">
-          {COLORES.map((color, index) => (
-            <div key={color} className="flex items-center space-x-2">
-              <div
-                className="w-4 h-4 rounded-sm"
-                style={{ backgroundColor: color }}
-              ></div>
-              <span className="text-sm text-muted-foreground">
-                {index === 0
-                  ? "Sin ventas"
-                  : index === COLORES.length - 1
-                  ? "Máx. ventas"
-                  : ""}
-              </span>
-            </div>
-          ))}
+          <CardDescription>
+            Actividad de ventas por día y hora
+          </CardDescription>
         </div>
       </CardHeader>
 

@@ -1,4 +1,4 @@
-import { useDateRange } from '@/Contexts/date-range-context'; 
+import { useDateRange } from '@/Contexts/date-range-context';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 import { CartesianGrid, Line, LineChart, XAxis } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -22,19 +22,6 @@ const DIAS_SEMANA = [
   { inicial: 'S', nombre: 'Sábado' },
 ];
 
-const splitDateRange = (startDate: Date, endDate: Date) => {
-  const midDate = new Date(startDate);
-  const timeDiff = endDate.getTime() - startDate.getTime();
-  midDate.setTime(startDate.getTime() + timeDiff / 2);
-
-  return {
-    periodoActualStart: midDate,
-    periodoActualEnd: endDate,
-    periodoAnteriorStart: startDate,
-    periodoAnteriorEnd: midDate,
-  };
-};
-
 const initDayStructure = () =>
   DIAS_SEMANA.map((dia) => ({
     dia: dia.inicial,
@@ -43,20 +30,21 @@ const initDayStructure = () =>
     periodoAnterior: 0,
   }));
 
-const processData = (ventas: any[], startDate: Date, endDate: Date): ProcessedData[] => {
+const processData = (ventas: any[], ventasanterior: any[]): ProcessedData[] => {
   const dias = initDayStructure();
 
-  const { periodoActualStart, periodoActualEnd, periodoAnteriorStart, periodoAnteriorEnd } = splitDateRange(startDate, endDate);
-
+  // Procesar ventas del período actual
   ventas.forEach((venta) => {
     const fechaVenta = new Date(venta.fechaCreacion);
     const diaSemana = fechaVenta.getDay();
+    dias[diaSemana].periodoActual += venta.total;
+  });
 
-    if (fechaVenta >= periodoActualStart && fechaVenta <= periodoActualEnd) {
-      dias[diaSemana].periodoActual += venta.total;
-    } else if (fechaVenta >= periodoAnteriorStart && fechaVenta < periodoAnteriorEnd) {
-      dias[diaSemana].periodoAnterior += venta.total;
-    }
+  // Procesar ventas del período anterior
+  ventasanterior.forEach((venta) => {
+    const fechaVenta = new Date(venta.fechaCreacion);
+    const diaSemana = fechaVenta.getDay();
+    dias[diaSemana].periodoAnterior += venta.total;
   });
 
   return dias;
@@ -90,7 +78,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export function WeeklySalesComparison() {
   const { dateRange } = useDateRange();
-  const { ventas } = useReports();
+  const { ventas, ventasanterior } = useReports();
 
   const startDate = dateRange?.from || new Date();
   const endDate = dateRange?.to || new Date();
@@ -110,7 +98,8 @@ export function WeeklySalesComparison() {
     },
   } satisfies ChartConfig;
 
-  const data = processData(ventas, startDate, endDate);
+  // Procesar datos usando ventas y ventasanterior
+  const data = processData(ventas, ventasanterior);
   const totalPeriodoActual = data.reduce((sum, day) => sum + day.periodoActual, 0);
   const totalPeriodoAnterior = data.reduce((sum, day) => sum + day.periodoAnterior, 0);
   const diferencia = totalPeriodoActual - totalPeriodoAnterior;
@@ -131,8 +120,8 @@ export function WeeklySalesComparison() {
           <LineChart
             accessibilityLayer
             data={data}
-            width={0} 
-            height={0} 
+            width={0}
+            height={0}
             className="w-full h-full"
           >
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -172,7 +161,7 @@ export function WeeklySalesComparison() {
             </span>
           </div>
         </div>
-        <div className="text-xs">Comparacion de Periodos.</div>
+        <div className="text-xs">Comparación de Periodos.</div>
       </CardFooter>
     </Card>
   );

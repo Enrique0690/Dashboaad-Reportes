@@ -4,6 +4,7 @@ import { PaymentMethodsChart } from "./Graficos/MetodosPago"
 import { BusinessActivityHeatmap } from "./Graficos/Map-Calor"
 import { DatePickerWithRange } from "./components/ui/DatePicker"
 import { TopProductsChart } from "./Graficos/Utilidad"
+import { TicketPromedioChart } from "./Graficos/Promedio-Usuario"
 
 function App() {
   return (
@@ -31,7 +32,9 @@ function App() {
         <div className="lg:col-span-2 max-h-[600px] overflow-hidden">
           <BusinessActivityHeatmap />
         </div>
-        <div className=" max-h-[400px] overflow-hidden"></div>
+        <div className=" max-h-[600px] overflow-hidden">
+          <TicketPromedioChart />
+        </div>
         <div className=" max-h-[400px] overflow-hidden"></div>
       </div>
     </div>

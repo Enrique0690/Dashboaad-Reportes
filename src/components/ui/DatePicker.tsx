@@ -81,8 +81,7 @@ export function DatePickerWithRange({ className }: { className?: string }) {
         <PopoverContent className="w-auto p-0" align="start" forceMount>
           <div className="flex">
             <div className="flex flex-col p-2 gap-1 border-r">
-              {/* Aquí puedes habilitar los botones de rango predefinido si los necesitas */}
-              {/* {['currentQuarterToDate', 'lastQuarter', 'thisYear', 'thisYearToDate', 'lastYear', 'auto'].map((preset) => (
+              {['currentQuarterToDate', 'lastQuarter', 'thisYear', 'thisYearToDate', 'lastYear', 'auto'].map((preset) => (
                 <Button
                   key={preset}
                   variant="ghost"
@@ -97,7 +96,7 @@ export function DatePickerWithRange({ className }: { className?: string }) {
                   {preset === 'lastYear' && 'Año pasado'}
                   {preset === 'auto' && 'Periodo automático'}
                 </Button>
-              ))} */}
+              ))} 
             </div>
 
             <div className="p-3">

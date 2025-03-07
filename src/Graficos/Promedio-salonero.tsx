@@ -63,33 +63,13 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function UserSalesChart() {
-  const { dateRange } = useDateRange();
-  const { ventas } = useReports();
+  const { ventas, ventasanterior } = useReports();
 
-  const splitDataByPeriod = (data: any[], startDate: Date, endDate: Date) => {
-    const midDate = new Date((startDate.getTime() + endDate.getTime()) / 2); 
-
-    const currentPeriod = data.filter((item) => {
-      const fechaVenta = new Date(item.fechaCreacion);
-      return fechaVenta >= midDate && fechaVenta <= endDate;
-    });
-
-    const previousPeriod = data.filter((item) => {
-      const fechaVenta = new Date(item.fechaCreacion);
-      return fechaVenta >= startDate && fechaVenta < midDate;
-    });
-
-    return { currentPeriod, previousPeriod };
-  };
-
-  const processData = (ventas: any[], startDate?: Date, endDate?: Date) => {
-    if (!startDate || !endDate) return { usersData: [], totalGeneralActual: 0, totalGeneralAnterior: 0 };
-
-    const { currentPeriod, previousPeriod } = splitDataByPeriod(ventas, startDate, endDate);
-
+  const processData = (ventas: any[], ventasanterior: any[]) => {
     const users: Record<string, { actual: number; anterior: number }> = {};
 
-    currentPeriod.forEach((venta) => {
+    // Procesar ventas del período actual
+    ventas.forEach((venta) => {
       const usuario = venta.usuario || 'Sin especificar';
       if (!users[usuario]) {
         users[usuario] = { actual: 0, anterior: 0 };
@@ -97,7 +77,8 @@ export function UserSalesChart() {
       users[usuario].actual += venta.total;
     });
 
-    previousPeriod.forEach((venta) => {
+    // Procesar ventas del período anterior
+    ventasanterior.forEach((venta) => {
       const usuario = venta.usuario || 'Sin especificar';
       if (!users[usuario]) {
         users[usuario] = { actual: 0, anterior: 0 };
@@ -105,6 +86,7 @@ export function UserSalesChart() {
       users[usuario].anterior += venta.total;
     });
 
+    // Ordenar usuarios por ventas actuales (de mayor a menor)
     const sortedUsers = Object.entries(users)
       .sort(([, a], [, b]) => b.actual - a.actual)
       .map(([usuario, { actual, anterior }]) => ({
@@ -120,7 +102,7 @@ export function UserSalesChart() {
     };
   };
 
-  const { usersData, totalGeneralActual, totalGeneralAnterior } = processData(ventas, dateRange?.from, dateRange?.to);
+  const { usersData, totalGeneralActual, totalGeneralAnterior } = processData(ventas, ventasanterior);
 
   return (
     <Card className="w-full h-full">
