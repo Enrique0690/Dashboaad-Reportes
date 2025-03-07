@@ -5,8 +5,8 @@ import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '
 import { useReports } from '@/Contexts/report-context';
 
 const COLORES = {
-  actual: '#2563eb',
-  anterior: '#60a5fa',
+  actual: '#22c55e',
+  anterior: '#16a34a',
 };
 
 const formatCurrency = (value: number) => {
@@ -63,8 +63,6 @@ export function TicketPromedioChart() {
 
   const totalTicketPromedioActual = data.reduce((sum, user) => sum + user.ticketPromedioActual, 0);
   const totalTicketPromedioAnterior = data.reduce((sum, user) => sum + user.ticketPromedioAnterior, 0);
-  const diferencia = totalTicketPromedioActual - totalTicketPromedioAnterior;
-  const porcentaje = totalTicketPromedioAnterior > 0 ? ((diferencia / totalTicketPromedioAnterior) * 100).toFixed(1) : '100';
 
   return (
     <Card className="h-[600px] flex flex-col">

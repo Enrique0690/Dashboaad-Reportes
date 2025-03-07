@@ -6,12 +6,13 @@ import { useMemo } from "react";
 const DIAS_SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 const COLORES = [
-  "#f0f9ff",
-  "#bae6fd",
-  "#7dd3fc",
-  "#38bdf8",
-  "#0284c7"
+  "#d1e7d2", 
+  "#a3d9a5", 
+  "#6cbf6a", 
+  "#2f9e55",
+  "#1c7a3a"  
 ];
+
 
 export function BusinessActivityHeatmap() {
   const { ventas } = useReports();

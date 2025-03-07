@@ -1,4 +1,3 @@
-import { useDateRange } from "@/Contexts/date-range-context";
 import { TrendingUp } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, TooltipProps, YAxis } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -12,8 +11,8 @@ interface UserSalesData {
 }
 
 const COLORES = {
-  actual: "#2563eb",
-  anterior: "#60a5fa",
+  actual: '#22c55e',
+  anterior: '#16a34a',
 };
 
 const formatCurrency = (value: number) => {
