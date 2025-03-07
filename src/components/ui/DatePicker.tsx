@@ -47,25 +47,42 @@ export function DatePickerWithRange({ className }: { className?: string }) {
     setIsOpen(false)
   }
 
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("es-ES", {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  }
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
             variant={"outline"}
-            size="icon"
+            size="lg" 
             className={cn(
-              "h-10 w-10",
+              "h-12 w-full flex items-center justify-between", 
               !dateRange && "text-muted-foreground"
             )}
           >
-            <CalendarIcon className="h-4 w-4" />
+            {/* Texto visible solo en pantallas grandes */}
+            <span className="hidden sm:block text-lg font-semibold truncate">
+              {dateRange?.from && dateRange?.to
+                ? `${formatDate(dateRange.from)} - ${formatDate(dateRange.to)}`
+                : "Seleccione una fecha"}
+            </span>
+            
+            {/* Icono visible en todos los tamaños */}
+            <CalendarIcon className="h-5 w-5 ml-2" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start" forceMount>
           <div className="flex">
             <div className="flex flex-col p-2 gap-1 border-r">
-              {['currentQuarterToDate', 'lastQuarter', 'thisYear', 'thisYearToDate', 'lastYear', 'auto'].map((preset) => (
+              {/* Aquí puedes habilitar los botones de rango predefinido si los necesitas */}
+              {/* {['currentQuarterToDate', 'lastQuarter', 'thisYear', 'thisYearToDate', 'lastYear', 'auto'].map((preset) => (
                 <Button
                   key={preset}
                   variant="ghost"
@@ -73,16 +90,14 @@ export function DatePickerWithRange({ className }: { className?: string }) {
                   className="text-left justify-start"
                   onClick={() => setSelectedRange(getPresetRange(preset))}
                 >
-                  {{
-                    'currentQuarterToDate': 'Este trimestre hasta la fecha',
-                    'lastQuarter': 'Último trimestre',
-                    'thisYear': 'Este año',
-                    'thisYearToDate': 'Este año hasta la fecha',
-                    'lastYear': 'Año pasado',
-                    'auto': 'Periodo automático'
-                  }[preset]}
+                  {preset === 'currentQuarterToDate' && 'Este trimestre hasta la fecha'}
+                  {preset === 'lastQuarter' && 'Último trimestre'}
+                  {preset === 'thisYear' && 'Este año'}
+                  {preset === 'thisYearToDate' && 'Este año hasta la fecha'}
+                  {preset === 'lastYear' && 'Año pasado'}
+                  {preset === 'auto' && 'Periodo automático'}
                 </Button>
-              ))}
+              ))} */}
             </div>
 
             <div className="p-3">
