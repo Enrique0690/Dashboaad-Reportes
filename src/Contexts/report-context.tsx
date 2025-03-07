@@ -1,8 +1,7 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import { useDateRange } from './date-range-context';
 import { Spinner } from '@/components/ui/Spinner';
-
-const API_BASE_URL = 'http://localhost:1000/LOCAL_NETWORK/REPORTES';
+import { useSearchParams } from 'react-router-dom';
 
 interface ReportData {
   [key: string]: any;
@@ -43,6 +42,12 @@ const ReportContext = createContext<ReportContextType>({
 });
 
 export function ReportProvider({ children }: { children: React.ReactNode }) {
+  const [searchParams] = useSearchParams();
+  const nombreLocal = searchParams.get('nombreLocal') || '';
+  const urlServicio = searchParams.get('urlServicio') ;
+  const idUsuario = searchParams.get('idUsuario') ;
+  const deviceID = searchParams.get('deviceID') ;
+
   const { dateRange } = useDateRange();
   const [ventas, setVentas] = useState<ReportData[]>([]);
   const [utilidad, setUtilidad] = useState<ReportData[]>([]);
@@ -71,8 +76,8 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
         desde: `${dateRange.from!.toISOString().split('T')[0]} 00:00`,
         hasta: `${dateRange.to!.toISOString().split('T')[0]} 23:59`,
         tablet: {
-          deviceID: 1739913025,
-          usuario: 1,
+          deviceID,
+          usuario: idUsuario,
           bodega: 1,
           fecha: new Date().toISOString(),
         },
@@ -88,8 +93,8 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
         desde: `${previousRangeFrom.toISOString().split('T')[0]} 00:00`,
         hasta: `${previousRangeTo.toISOString().split('T')[0]} 23:59`,
         tablet: {
-          deviceID: 1739913025,
-          usuario: 1,
+          deviceID,
+          usuario: idUsuario,
           bodega: 1,
           fecha: new Date().toISOString(),
         },
@@ -97,7 +102,7 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const fetchData = async (endpoint: string, setter: (data: ReportData[]) => void, formData: any) => {
-          const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+          const response = await fetch(`${urlServicio}/${endpoint}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData),
