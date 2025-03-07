@@ -1,54 +1,38 @@
-# React + TypeScript + Vite
+# Uso de Parámetros en la URL para la Generación de Reportes
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Descripción
+Esta aplicación permite generar reportes dinámicamente mediante parámetros enviados en la URL. A continuación, se describe cómo construir la URL correctamente y qué valores debe contener.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Estructura de la URL
 
-## Expanding the ESLint configuration
+La URL tiene el siguiente formato:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+### Parámetros:
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+| Parámetro      | Descripción |
+|---------------|------------|
+| `nombreLocal` | Nombre del establecimiento o tienda que solicita el reporte. |
+| `urlServicio` | Endpoint del servicio donde se obtendrán los datos del reporte. Debe ser una URL válida. |
+| `idUsuario`   | ID único del usuario que solicita el reporte. |
+| `deviceID`    | ID del dispositivo desde el cual se genera la solicitud. |
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+## Ejemplo de Uso
+
+Si un usuario de la tienda "SuperMarket" necesita obtener un reporte desde un servidor local con su ID de usuario `456` y su dispositivo `8888`, la URL debe construirse de la siguiente manera:
+
+http://localhost:5173/reportes?nombreLocal=SuperMarket&urlServicio=http://localhost:1000/LOCAL_NETWORK/REPORTES&idUsuario=456&deviceID=8888
+
+
+---
+
+## Notas Importantes
+- `urlServicio` debe contener una URL accesible para la aplicación.
+- Asegúrate de codificar correctamente los parámetros si contienen caracteres especiales.  
+  Ejemplo en JavaScript:
+  ```js
+  const urlServicio = encodeURIComponent("http://localhost:1000/LOCAL NETWORK/REPORTES");
