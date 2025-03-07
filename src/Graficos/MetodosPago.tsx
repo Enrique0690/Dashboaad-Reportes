@@ -130,12 +130,6 @@ export function PaymentMethodsChart() {
                 content={
                   <ChartTooltipContent
                     nameKey="metodo"
-                    valueFormatter={(value) =>
-                      Number(value).toLocaleString("es-EC", {
-                        style: "currency",
-                        currency: "USD",
-                      })
-                    }
                     labelFormatter={(label) => chartConfig[label]?.label || label}
                   />
                 }
