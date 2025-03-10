@@ -25,7 +25,7 @@ La URL tiene el siguiente formato:
 
 Si un usuario de la tienda "SuperMarket" necesita obtener un reporte desde un servidor local con su ID de usuario `456` y su dispositivo `8888`, la URL debe construirse de la siguiente manera:
 
-http://localhost:5173/reportes?nombreLocal=SuperMarket&urlServicio=http://localhost:1000/LOCAL_NETWORK/REPORTES&idUsuario=456&deviceID=8888
+?nombreLocal=SuperMarket&urlServicio=http://localhost:1000/LOCAL_NETWORK/REPORTES&idUsuario=456&deviceID=8888
 
 
 ---

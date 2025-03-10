@@ -43,7 +43,6 @@ const ReportContext = createContext<ReportContextType>({
 
 export function ReportProvider({ children }: { children: React.ReactNode }) {
   const [searchParams] = useSearchParams();
-  const nombreLocal = searchParams.get('nombreLocal') || '';
   const urlServicio = searchParams.get('urlServicio') ;
   const idUsuario = searchParams.get('idUsuario') ;
   const deviceID = searchParams.get('deviceID') ;
