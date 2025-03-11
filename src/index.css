@@ -72,24 +72,24 @@
   --chart-5: hsl(340 75% 55%);
 }
 
-/* Estilos para la barra de desplazamiento del mapa de calor */
 .scrollbar-minimal::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.scrollbar-minimal::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-  border-radius: 4px;
+  width: 4px;
+  height: 4px;
 }
 
 .scrollbar-minimal::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground));
+  background-color: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
 }
 
-.scrollbar-minimal::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary));
+.scrollbar-minimal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (max-width: 640px) {
+  body {
+    padding-bottom: 90px; 
+  }
 }
 
 @theme inline {

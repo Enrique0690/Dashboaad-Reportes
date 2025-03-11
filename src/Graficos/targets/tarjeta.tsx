@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useReports } from '@/Contexts/report-context';
+import { DataStatusHandler } from "@/utils/DataStatusHandler";
 
 export function TotalTarjetaCard() {
-  const { ventasFormasPago } = useReports();
+  const { ventasFormasPago, ventasFormasPagoLoading, ventasFormasPagoError } = useReports();
 
   // Filtrar ventas que contengan la palabra "tarjeta" (insensible a mayúsculas/minúsculas)
   const ventasTarjeta = ventasFormasPago.filter(venta =>
@@ -14,6 +15,7 @@ export function TotalTarjetaCard() {
 
   return (
     <Card className="w-full h-full">
+      <DataStatusHandler isLoading={ventasFormasPagoLoading} error={ventasFormasPagoError} >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 -mb-5">
         <CardTitle className="text-sm font-medium text-gray-400">
           Total en Tarjeta
@@ -26,6 +28,7 @@ export function TotalTarjetaCard() {
           +{ventasTarjeta.length} Transacciones
         </p>
       </CardContent>
+      </DataStatusHandler>
     </Card>
   );
 }

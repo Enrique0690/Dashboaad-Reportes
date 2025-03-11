@@ -4,7 +4,7 @@ import {  Card,  CardContent,  CardDescription,  CardFooter,  CardHeader,  CardT
 import {  ChartConfig,  ChartContainer,  ChartTooltip,  ChartTooltipContent} from "@/components/ui/chart";
 import { useReports } from "@/Contexts/report-context";
 import { useState } from "react";
-
+import { DataStatusHandler } from "@/utils/DataStatusHandler";
 // Definir colores para cada barra del gráfico
 const COLORS = [
   "#2563eb",
@@ -27,7 +27,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function TopProductsChart() {
-  const { utilidad } = useReports();
+  const { utilidad, utilidadLoading, utilidadError } = useReports();
   const [sortBy, setSortBy] = useState<"cantidad" | "neto">("cantidad");
 
   // Procesar los datos para obtener los productos más vendidos
@@ -61,6 +61,7 @@ export function TopProductsChart() {
 
   return (
     <Card className="w-full h-full flex flex-col">
+      <DataStatusHandler isLoading={utilidadLoading} error={utilidadError}>
       <CardHeader>
         <CardTitle>Top 6 Productos Más Vendidos</CardTitle>
         <CardDescription>
@@ -69,9 +70,9 @@ export function TopProductsChart() {
             : "Clasificados por total neto"}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col gap-4 p-4">
+      <CardContent className="flex-1 flex flex-col gap-4 ">
         {/* Contenedor para los botones */}
-        <div className="flex gap-2 justify-center md:justify-start">
+        <div className="flex gap-2 justify-center">
           <button
             onClick={() => setSortBy("cantidad")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -142,6 +143,7 @@ export function TopProductsChart() {
           Mostrando los 6 productos principales
         </div>
       </CardFooter>
+      </DataStatusHandler>
     </Card>
   );
 }

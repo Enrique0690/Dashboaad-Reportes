@@ -1,8 +1,8 @@
-import { TrendingUp } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, TooltipProps, YAxis } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip } from "@/components/ui/chart";
 import { useReports } from '@/Contexts/report-context';
+import { DataStatusHandler } from "@/utils/DataStatusHandler";
 
 interface UserSalesData {
   usuario: string;
@@ -26,18 +26,18 @@ const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
   if (active && payload?.length) {
     const data = payload[0].payload as UserSalesData;
     return (
-      <div className="bg-background p-4 rounded-lg shadow-lg border max-w-[180px]">
-        <p className="font-semibold text-sm">{data.usuario}</p>
+      <div className="bg-white p-3 rounded-md shadow-sm border border-gray-200">
+        <p className="font-medium text-green-800">{data.usuario}</p>
         <div className="mt-2 space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[#2563eb]">●</span>
+            <span className="text-[#22c55e]">●</span> {/* Color actual */}
             <span className="text-xs ml-2">Actual:</span>
             <span className="text-xs font-semibold ml-2">
               {formatCurrency(data.totalVentasActual)}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-[#60a5fa]">●</span>
+            <span className="text-[#16a34a]">●</span> {/* Color anterior */}
             <span className="text-xs ml-2">Anterior:</span>
             <span className="text-xs font-semibold ml-2">
               {formatCurrency(data.totalVentasAnterior)}
@@ -62,7 +62,9 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function UserSalesChart() {
-  const { ventas, ventasanterior } = useReports();
+  const { ventas, ventasanterior, ventasLoading, ventasanteriorLoading, ventasError, ventasanteriorError } = useReports();
+  const isLoading = ventasLoading || ventasanteriorLoading;
+  const error = ventasError || ventasanteriorError;
 
   const processData = (ventas: any[], ventasanterior: any[]) => {
     const users: Record<string, { actual: number; anterior: number }> = {};
@@ -104,24 +106,24 @@ export function UserSalesChart() {
   const { usersData, totalGeneralActual, totalGeneralAnterior } = processData(ventas, ventasanterior);
 
   return (
-    <Card className="w-full h-full">
-      <CardHeader>
-        <div>
-          <CardTitle>Ventas por Usuario</CardTitle>
-          <CardDescription>
-            Distribución de ventas por responsable (período actual vs. anterior)
-          </CardDescription>
-        </div>
-      </CardHeader>
+    <Card className="w-full h-[450px] shadow-sm border border-gray-200">
+      <DataStatusHandler isLoading={isLoading} error={error}>
+        <CardHeader>
+          <div>
+            <CardTitle className="text-lg font-semibold">Ventas por Usuario</CardTitle>
+            <CardDescription className="text-sm text-gray-500">
+              Distribución de ventas por responsable (período actual vs. anterior)
+            </CardDescription>
+          </div>
+        </CardHeader>
 
-      <CardContent className="p-6">
-        <div className="w-full overflow-x-auto">
-          <ChartContainer config={chartConfig} className="h-[400px] sm:h-[300px] w-full">
+        <CardContent className="w-full h-[calc(450px-150px)] p-4">
+          <ChartContainer config={chartConfig} className="w-full h-full">
             <BarChart
               data={usersData}
               margin={{ left: 12, right: 12, top: 20, bottom: 20 }}
             >
-              <CartesianGrid vertical={false} />
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis
                 dataKey="usuario"
                 tickLine={false}
@@ -142,34 +144,38 @@ export function UserSalesChart() {
                 dataKey="totalVentasActual"
                 fill={COLORES.actual}
                 radius={[4, 4, 0, 0]}
-                barSize={20}  
+                barSize={20}
                 name="Período Actual"
               />
               <Bar
                 dataKey="totalVentasAnterior"
                 fill={COLORES.anterior}
                 radius={[4, 4, 0, 0]}
-                barSize={20}  
+                barSize={20}
                 name="Período Anterior"
               />
             </BarChart>
           </ChartContainer>
-        </div>
-      </CardContent>
+        </CardContent>
 
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
-          Periodo actual: {formatCurrency(totalGeneralActual)}
-          <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="flex items-center gap-2 font-medium leading-none">
-          Periodo anterior: {formatCurrency(totalGeneralAnterior)}
-          <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="leading-none text-muted-foreground">
-          {usersData.length} usuarios registrados
-        </div>
-      </CardFooter>
+        <CardFooter className="flex flex-col gap-2 text-sm text-gray-500">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <span className="block w-3 h-3" style={{ backgroundColor: COLORES.actual }}></span>
+              <span className="font-medium text-gray-800">
+                Período Actual: {formatCurrency(totalGeneralActual)}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="block w-3 h-3" style={{ backgroundColor: COLORES.anterior }}></span>
+              <span className="font-medium text-gray-800">
+                Período Anterior: {formatCurrency(totalGeneralAnterior)}
+              </span>
+            </div>
+          </div>
+          <div className="text-xs">{usersData.length} usuarios registrados</div>
+        </CardFooter>
+      </DataStatusHandler>
     </Card>
   );
 }

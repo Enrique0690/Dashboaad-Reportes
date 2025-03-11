@@ -1,14 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useReports } from '@/Contexts/report-context';
+import { DataStatusHandler } from "@/utils/DataStatusHandler";
 
 export function TotalVentasCard() {
-  const { ventas } = useReports();
+  const { ventas, ventasLoading, ventasError } = useReports();
 
   const totalVentas = ventas.length;
   const valorTotalVentas = ventas.reduce((sum, venta) => sum + venta.total, 0);
   
   return (
     <Card className="w-full h-full">
+      <DataStatusHandler isLoading={ventasLoading} error={ventasError} >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 -mb-5">
         <CardTitle className="text-sm font-medium text-gray-400">
           Total de Ventas
@@ -21,6 +23,7 @@ export function TotalVentasCard() {
           +{totalVentas} Numero total de ventas
         </p>
       </CardContent>
+      </DataStatusHandler>
     </Card>
   );
 }

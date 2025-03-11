@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useReports } from '@/Contexts/report-context';
+import { DataStatusHandler } from "@/utils/DataStatusHandler";
 
 export function TotalEfectivoCard() {
-  const { ventasFormasPago } = useReports();
+  const { ventasFormasPago, ventasFormasPagoLoading, ventasFormasPagoError } = useReports();
 
   // Filtrar ventas en efectivo y calcular el total
   const ventasEfectivo = ventasFormasPago.filter(venta => venta.FormaPago === "EFECTIVO");
@@ -10,6 +11,7 @@ export function TotalEfectivoCard() {
 
   return (
     <Card className="w-full h-full">
+      <DataStatusHandler isLoading={ventasFormasPagoLoading} error={ventasFormasPagoError} >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 -mb-5">
         <CardTitle className="text-sm font-medium text-gray-400">
           Total en Efectivo
@@ -22,6 +24,7 @@ export function TotalEfectivoCard() {
           +{ventasEfectivo.length} Transacciones
         </p>
       </CardContent>
+      </DataStatusHandler>
     </Card>
   );
 }
