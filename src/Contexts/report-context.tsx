@@ -130,6 +130,13 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
   const [ventasFormasPagoAnteriorError, setVentasFormasPagoAnteriorError] = useState<string | null>(null);
   const [ventasArticulosAnteriorError, setVentasArticulosAnteriorError] = useState<string | null>(null);
 
+  const filterReports = (data: ReportData[]): ReportData[] => {
+    return data.filter(item => 
+      (item.documento === "NOTA DE ENTREGA" || item.documento === "FACTURA") &&
+      item.estado === "ACTIVO"
+    );
+  };
+
   useEffect(() => {
     if (!dateRange?.from || !dateRange?.to) return;
 
@@ -170,9 +177,17 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
         formData: any
       ) => {
         loadingSetter(true);
-        errorSetter(null); // Limpiar el error antes de hacer la consulta
+        errorSetter(null);
+      
+        if (!urlServicio) {
+          errorSetter('URL de servicio no proporcionada');
+          loadingSetter(false);
+          return;
+        }
+      
         try {
-          const response = await fetch(`${urlServicio}/LOCAL_NETWORK/REPORTES/${endpoint}`, {
+          const url = new URL(`LOCAL_NETWORK/REPORTES/${endpoint}`, urlServicio).toString();
+          const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData),
@@ -180,27 +195,25 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
           const data = await response.json();
           setter(Array.isArray(data) ? data : []);
         } catch (err) {
-          errorSetter('Error al obtener reportes'); // Establecer el error específico
+          errorSetter('Error al obtener reportes');
         } finally {
           loadingSetter(false);
         }
       };
 
-      // Ejecutar todas las consultas en paralelo
-      await Promise.all([
-        fetchData('VENTAS', setVentas, setVentasLoading, setVentasError, formData),
+      await Promise.allSettled([
+        fetchData('VENTAS', (data) => setVentas(filterReports(data)), setVentasLoading, setVentasError, formData),
         fetchData('UTILIDAD', setUtilidad, setUtilidadLoading, setUtilidadError, formData),
-        fetchData('VENTAS_CLIENTES', setClientes, setClientesLoading, setClientesError, formData),
-        fetchData('PEDIDOS_ANULADOS', setPedidosAnulados, setPedidosAnuladosLoading, setPedidosAnuladosError, formData),
         fetchData('VENTAS_FORMASPAGO', setVentasFormasPago, setVentasFormasPagoLoading, setVentasFormasPagoError, formData),
-        fetchData('VENTAS_ARTICULOS', setVentasArticulos, setVentasArticulosLoading, setVentasArticulosError, formData),
-        fetchData('VENTAS', setVentasanterior, setVentasanteriorLoading, setVentasanteriorError, formDataAnterior),
-        fetchData('UTILIDAD', setUtilidadanterior, setUtilidadanteriorLoading, setUtilidadanteriorError, formDataAnterior),
-        fetchData('VENTAS_CLIENTES', setClientesanterior, setClientesanteriorLoading, setClientesanteriorError, formDataAnterior),
-        fetchData('PEDIDOS_ANULADOS', setPedidosAnuladosAnterior, setPedidosAnuladosAnteriorLoading, setPedidosAnuladosAnteriorError, formDataAnterior),
+        fetchData('VENTAS', (data) => setVentasanterior(filterReports(data)), setVentasanteriorLoading, setVentasanteriorError, formDataAnterior),
         fetchData('VENTAS_FORMASPAGO', setVentasFormasPagoAnterior, setVentasFormasPagoAnteriorLoading, setVentasFormasPagoAnteriorError, formDataAnterior),
-        fetchData('VENTAS_ARTICULOS', setVentasArticulosAnterior, setVentasArticulosAnteriorLoading, setVentasArticulosAnteriorError, formDataAnterior),
-      ]);
+      ]).then((results) => {
+        results.forEach((result, index) => {
+          if (result.status === 'rejected') {
+            console.error(`La consulta ${index} falló:`, result.reason);
+          }
+        });
+      });
     };
 
     fetchReports();

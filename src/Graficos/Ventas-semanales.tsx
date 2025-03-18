@@ -1,58 +1,66 @@
 import { useDateRange } from '@/Contexts/date-range-context';
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { CartesianGrid, Line, LineChart, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { useReports } from '@/Contexts/report-context';
 import { DataStatusHandler } from '@/utils/DataStatusHandler';
 
 interface ProcessedData {
-  dia: string;
+  fecha: string;
   nombreCompleto: string;
   periodoActual: number;
-  periodoAnterior: number;
 }
-
-const DIAS_SEMANA = [
-  { inicial: 'D', nombre: 'Domingo' },
-  { inicial: 'L', nombre: 'Lunes' },
-  { inicial: 'M', nombre: 'Martes' },
-  { inicial: 'X', nombre: 'Miércoles' },
-  { inicial: 'J', nombre: 'Jueves' },
-  { inicial: 'V', nombre: 'Viernes' },
-  { inicial: 'S', nombre: 'Sábado' },
-];
 
 const COLORES = {
   actual: '#22c55e',
-  anterior: '#16a34a',
 };
 
-const initDayStructure = () =>
-  DIAS_SEMANA.map((dia) => ({
-    dia: dia.inicial,
-    nombreCompleto: dia.nombre,
-    periodoActual: 0,
-    periodoAnterior: 0,
-  }));
+const formatDate = (date: Date) => {
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  return `${day}-${month}-${date.getFullYear()}`;
+};
 
-const processData = (ventas: any[], ventasanterior: any[]): ProcessedData[] => {
-  const dias = initDayStructure();
+const formatDateShort = (dateString: string) => {
+  const [day, month, year] = dateString.split('-');
+  return `${day}/${month}/${year.slice(-2)}`; 
+};
 
-  // Procesar ventas del período actual
+const formatNumber = (value: number): string => {
+  if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+  if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
+  return value.toLocaleString('es-EC');
+};
+
+const processData = (ventas: any[], startDate: Date, endDate: Date): ProcessedData[] => {
+  const dateMap = new Map<string, number>();
+  const currentDate = new Date(startDate);
+  const end = new Date(endDate);
+
+  while (currentDate <= end) {
+    const dateKey = formatDate(currentDate);
+    dateMap.set(dateKey, 0);
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
   ventas.forEach((venta) => {
-    const fechaVenta = new Date(venta.fechaCreacion);
-    const diaSemana = fechaVenta.getDay();
-    dias[diaSemana].periodoActual += venta.total;
+    const saleDate = new Date(venta.fechaCreacion);
+    const dateKey = formatDate(saleDate);
+    if (dateMap.has(dateKey)) {
+      dateMap.set(dateKey, dateMap.get(dateKey)! + venta.total);
+    }
   });
 
-  // Procesar ventas del período anterior
-  ventasanterior.forEach((venta) => {
-    const fechaVenta = new Date(venta.fechaCreacion);
-    const diaSemana = fechaVenta.getDay();
-    dias[diaSemana].periodoAnterior += venta.total;
-  });
-
-  return dias;
+  return Array.from(dateMap.entries()).map(([fecha, periodoActual]) => ({
+    fecha,
+    nombreCompleto: new Date(fecha.split('-').reverse().join('-')).toLocaleDateString('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }),
+    periodoActual
+  }));
 };
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -61,39 +69,11 @@ const CustomTooltip = ({ active, payload }: any) => {
     return (
       <div className="bg-white p-3 rounded-md shadow-sm border border-gray-200">
         <p className="font-medium text-green-800">{data.nombreCompleto}</p>
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <span
-              className="block w-4 h-0.5"
-              style={{ backgroundColor: COLORES.actual }}
-            ></span>
-            <p className="text-sm text-gray-700">
-              Período Actual:{' '}
-              <span className="font-medium">
-                {data.periodoActual.toLocaleString('es-EC', {
-                  style: 'currency',
-                  currency: 'USD',
-                })}
-              </span>
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span
-              className="block w-4 h-0.5"
-              style={{
-                borderBottom: `2px dashed ${COLORES.anterior}`,
-              }}
-            ></span>
-            <p className="text-sm text-gray-700">
-              Período Anterior:{' '}
-              <span className="font-medium">
-                {data.periodoAnterior.toLocaleString('es-EC', {
-                  style: 'currency',
-                  currency: 'USD',
-                })}
-              </span>
-            </p>
-          </div>
+        <div className="flex items-center gap-2 mt-2">
+          <span className="block w-4 h-0.5 bg-green-500"></span>
+          <p className="text-sm text-gray-700">
+            Ventas: <span className="font-medium">{formatNumber(data.periodoActual)}</span>
+          </p>
         </div>
       </div>
     );
@@ -103,14 +83,12 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export function WeeklySalesComparison() {
   const { dateRange } = useDateRange();
-  const { ventas, ventasanterior, ventasLoading, ventasanteriorLoading, ventasError, ventasanteriorError } = useReports();
+  const { ventas, ventasLoading, ventasError } = useReports();
   const startDate = dateRange?.from || new Date();
   const endDate = dateRange?.to || new Date();
-  const isLoading = ventasLoading || ventasanteriorLoading;
-  const error = ventasError || ventasanteriorError;
 
   const formatDateRange = (start: Date, end: Date) => {
-    return `${start.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} - ${end.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}`;
+    return `${start.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })} - ${end.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}`;
   };
 
   const chartConfig = {
@@ -118,77 +96,61 @@ export function WeeklySalesComparison() {
       label: `Período Actual`,
       color: COLORES.actual,
     },
-    periodoAnterior: {
-      label: `Período Anterior`,
-      color: COLORES.anterior,
-    },
   } satisfies ChartConfig;
 
-  // Procesar datos usando ventas y ventasanterior
-  const data = processData(ventas, ventasanterior);
-  const totalPeriodoActual = data.reduce((sum, day) => sum + day.periodoActual, 0);
-  const totalPeriodoAnterior = data.reduce((sum, day) => sum + day.periodoAnterior, 0);
+  const data = processData(ventas, startDate, endDate);
 
   return (
-    <Card className="w-full h-[450px] shadow-sm border border-gray-200">
-      <DataStatusHandler isLoading={isLoading} error={error}>
-        <CardHeader>
+    <Card className="w-full h-[450px] shadow-sm border border-gray-200 overflow-hidden">
+      <DataStatusHandler isLoading={ventasLoading} error={ventasError}>
+        <CardHeader className="pb-2">
           <div>
-            <CardTitle className="text-lg font-semibold">Comparación de Ventas</CardTitle>
+            <CardTitle className="text-lg font-semibold">Ventas por Fecha</CardTitle>
             <CardDescription className="text-sm text-gray-500">
               {formatDateRange(startDate, endDate)}
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="w-full h-[calc(450px-150px)] p-4">
-          <ChartContainer config={chartConfig} className="w-full h-full">
-            <LineChart
-              accessibilityLayer
-              data={data}
-              width={0}
-              height={0}
-              className="w-full h-full"
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid vertical={false} strokeDasharray="3 3" />
-              <XAxis dataKey="dia" tickLine={false} axisLine={false} tickMargin={8} />
-              <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => value.toLocaleString('es-EC', { style: 'currency', currency: 'USD' })} />
-              <ChartTooltip cursor={false} content={<CustomTooltip />} />
-              <Line
-                dataKey="periodoActual"
-                type="linear"
-                stroke={COLORES.actual}
-                strokeWidth={2}
-                dot={false}
-              />
-              <Line
-                dataKey="periodoAnterior"
-                type="linear"
-                stroke={COLORES.anterior}
-                strokeWidth={2}
-                strokeDasharray="4 4"
-                dot={false}
-              />
-            </LineChart>
+        <CardContent className="w-full h-[calc(450px-80px)] p-3 overflow-x-auto">
+          <ChartContainer config={chartConfig} className="w-full h-full min-w-[600px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={data}
+                margin={{ top: 10, right: 15, left: -20, bottom: 60 }} 
+              >
+                <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="fecha"
+                  tickFormatter={formatDateShort}
+                  tickLine={false}
+                  axisLine={false}
+                  angle={-45}
+                  textAnchor="end"
+                  tickMargin={35} // Aumentamos espacio para ticks
+                  interval={0}
+                  style={{
+                    fontSize: '0.75rem', 
+                    whiteSpace: 'nowrap'
+                  }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => formatNumber(value)}
+                  width={75}
+                />
+                <ChartTooltip cursor={false} content={<CustomTooltip />} />
+                <Line
+                  dataKey="periodoActual"
+                  type="linear"
+                  stroke={COLORES.actual}
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </ChartContainer>
         </CardContent>
-        <CardFooter className="flex flex-col gap-2 text-sm text-gray-500">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1">
-              <span className="block w-3 h-3" style={{ backgroundColor: COLORES.actual }}></span>
-              <span className="font-medium text-gray-800">
-                Período Actual: {totalPeriodoActual.toLocaleString('es-EC', { style: 'currency', currency: 'USD' })}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="block w-3 h-3" style={{ backgroundColor: COLORES.anterior }}></span>
-              <span className="font-medium text-gray-800">
-                Período Anterior: {totalPeriodoAnterior.toLocaleString('es-EC', { style: 'currency', currency: 'USD' })}
-              </span>
-            </div>
-          </div>
-          <div className="text-xs">Comparación de Periodos.</div>
-        </CardFooter>
       </DataStatusHandler>
     </Card>
   );

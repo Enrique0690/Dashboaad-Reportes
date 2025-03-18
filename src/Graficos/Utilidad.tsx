@@ -1,6 +1,5 @@
-import { TrendingUp } from "lucide-react";
 import { Bar, BarChart, XAxis, YAxis } from "recharts";
-import {  Card,  CardContent,  CardDescription,  CardFooter,  CardHeader,  CardTitle} from "@/components/ui/card";
+import {  Card,  CardContent,  CardDescription,  CardHeader,  CardTitle} from "@/components/ui/card";
 import {  ChartConfig,  ChartContainer,  ChartTooltip,  ChartTooltipContent} from "@/components/ui/chart";
 import { useReports } from "@/Contexts/report-context";
 import { useState } from "react";
@@ -132,17 +131,6 @@ export function TopProductsChart() {
           </ChartContainer>
         </div>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm p-4 border-t">
-        <div className="flex gap-2 font-medium leading-none">
-          <TrendingUp className="h-4 w-4" />
-          {sortBy === "cantidad"
-            ? "Productos más vendidos este mes"
-            : "Productos con mayor utilidad este mes"}
-        </div>
-        <div className="leading-none text-muted-foreground p-3">
-          Mostrando los 6 productos principales
-        </div>
-      </CardFooter>
       </DataStatusHandler>
     </Card>
   );

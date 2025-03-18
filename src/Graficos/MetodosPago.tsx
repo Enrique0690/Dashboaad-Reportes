@@ -1,8 +1,7 @@
 import { useDateRange } from "@/Contexts/date-range-context";
-import { TrendingUp } from "lucide-react";
 import { Pie, PieChart } from "recharts";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartConfig, ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { useReports } from "@/Contexts/report-context";
 import { DataStatusHandler } from "@/utils/DataStatusHandler";
 
@@ -33,10 +32,16 @@ const normalizeMethod = (method: string) => {
     .trim();
 };
 
+const formatCurrency = (value: number) => {
+  return value.toLocaleString("es-EC", {
+    style: "currency",
+    currency: "USD",
+  });
+};
+
 const processData = (ventasFormasPago: any[], startDate?: Date, endDate?: Date) => {
   const metodos: Record<string, { count: number; total: number; originalName: string }> = {};
 
-  // Procesar ventas y agrupar por método de pago
   ventasFormasPago.forEach((venta) => {
     const fechaVenta = new Date(venta.fechaEmision);
     if (startDate && endDate && (fechaVenta < startDate || fechaVenta > endDate)) {
@@ -45,7 +50,7 @@ const processData = (ventasFormasPago: any[], startDate?: Date, endDate?: Date) 
 
     const metodoRaw = venta.FormaPago || "Otro";
     const metodoKey = normalizeMethod(metodoRaw);
-
+    const monto = typeof venta.monto === "number" ? venta.monto : 0; 
     if (!metodos[metodoKey]) {
       metodos[metodoKey] = {
         count: 0,
@@ -55,10 +60,9 @@ const processData = (ventasFormasPago: any[], startDate?: Date, endDate?: Date) 
     }
 
     metodos[metodoKey].count++;
-    metodos[metodoKey].total += venta.monto;
+    metodos[metodoKey].total += monto;
   });
 
-  // Ordenar métodos por cantidad de transacciones (de mayor a menor)
   const sortedMethods = Object.entries(metodos).sort((a, b) => b[1].count - a[1].count);
   const totalVentas = sortedMethods.reduce((sum, [, data]) => sum + data.total, 0);
 
@@ -68,7 +72,7 @@ const processData = (ventasFormasPago: any[], startDate?: Date, endDate?: Date) 
 
   const data: PaymentData[] = [];
   let otherData: PaymentData | null = null;
-  const maxMainMethods = 4; // Mostrar solo los 4 métodos principales
+  const maxMainMethods = 4;
 
   sortedMethods.forEach(([key, value], index) => {
     if (index < maxMainMethods) {
@@ -82,7 +86,7 @@ const processData = (ventasFormasPago: any[], startDate?: Date, endDate?: Date) 
         cantidad: value.count,
         montoTotal: value.total,
         fill: COLORES[index % COLORES.length],
-        porcentaje: (value.total / totalVentas) * 100,
+        porcentaje: totalVentas > 0 ? (value.total / totalVentas) * 100 : 0,
       });
     } else {
       if (!otherData) {
@@ -90,7 +94,7 @@ const processData = (ventasFormasPago: any[], startDate?: Date, endDate?: Date) 
           metodo: "otros",
           cantidad: 0,
           montoTotal: 0,
-          fill: COLORES[COLORES.length - 1], // Usar el último color para "Otros"
+          fill: COLORES[COLORES.length - 1],
           porcentaje: 0,
         };
         dynamicConfig.otros = {
@@ -100,7 +104,7 @@ const processData = (ventasFormasPago: any[], startDate?: Date, endDate?: Date) 
       }
       otherData.cantidad += value.count;
       otherData.montoTotal += value.total;
-      otherData.porcentaje += (value.total / totalVentas) * 100;
+      otherData.porcentaje += totalVentas > 0 ? (value.total / totalVentas) * 100 : 0; 
     }
   });
 
@@ -111,15 +115,39 @@ const processData = (ventasFormasPago: any[], startDate?: Date, endDate?: Date) 
   return { data, chartConfig: dynamicConfig };
 };
 
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload?.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white p-3 rounded-md shadow-sm border border-gray-200">
+        <p className="font-medium text-green-800">{data.metodo}</p>
+        <div className="mt-2 space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-xs">Monto:</span>
+            <span className="text-xs font-semibold ml-2">
+              {formatCurrency(data.montoTotal)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs">Porcentaje:</span>
+            <span className="text-xs font-semibold ml-2">
+              {data.porcentaje.toFixed(1)}%
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function PaymentMethodsChart() {
   const { dateRange } = useDateRange();
   const { ventasFormasPago, ventasFormasPagoLoading, ventasFormasPagoError } = useReports();
   const { data, chartConfig } = processData(ventasFormasPago, dateRange?.from, dateRange?.to);
-  const totalTransacciones = data.reduce((sum, item) => sum + item.cantidad, 0);
-  const totalMonto = data.reduce((sum, item) => sum + item.montoTotal, 0);
 
   return (
-    <Card className="w-full h-[450px] shadow-sm border border-gray-200 flex flex-col">
+    <Card className="w-full h-full shadow-sm border border-gray-200 flex flex-col">
       <DataStatusHandler isLoading={ventasFormasPagoLoading} error={ventasFormasPagoError}>
         <CardHeader className="items-center w-full text-center -mb-8">
           <CardTitle className="text-lg font-semibold">Métodos de Pago</CardTitle>
@@ -129,17 +157,10 @@ export function PaymentMethodsChart() {
         </CardHeader>
 
         <CardContent className="flex-1 flex flex-col items-center justify-center gap-4 p-4">
-          <div className="w-full h-[150px] flex justify-center">
+          <div className="w-full h-[250px] flex justify-center">
             <ChartContainer config={chartConfig} className="w-full h-full">
               <PieChart width={250} height={150}>
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      nameKey="metodo"
-                      labelFormatter={(label) => chartConfig[label]?.label || label}
-                    />
-                  }
-                />
+                <ChartTooltip content={<CustomTooltip />} />
                 <Pie
                   data={data}
                   dataKey="montoTotal"
@@ -152,7 +173,6 @@ export function PaymentMethodsChart() {
             </ChartContainer>
           </div>
 
-          {/* Leyenda de métodos de pago */}
           <div className="w-full flex flex-wrap justify-center gap-4">
             {data.map((item) => (
               <div key={item.metodo} className="flex items-center gap-2">
@@ -170,20 +190,6 @@ export function PaymentMethodsChart() {
             ))}
           </div>
         </CardContent>
-
-        <CardFooter className="flex flex-col gap-2 text-sm w-full p-4 border-t">
-          <div className="flex items-center gap-2 font-medium leading-none">
-            Total:{" "}
-            {totalMonto.toLocaleString("es-EC", {
-              style: "currency",
-              currency: "USD",
-            })}
-            <TrendingUp className="h-4 w-4" />
-          </div>
-          <div className="leading-none text-muted-foreground">
-            {totalTransacciones} transacciones registradas
-          </div>
-        </CardFooter>
       </DataStatusHandler>
     </Card>
   );

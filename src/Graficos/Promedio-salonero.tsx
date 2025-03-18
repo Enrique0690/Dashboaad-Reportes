@@ -1,43 +1,47 @@
-import { Bar, BarChart, CartesianGrid, XAxis, TooltipProps, YAxis } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip } from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, LabelList, ResponsiveContainer, TooltipProps } from "recharts";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartTooltip } from "@/components/ui/chart";
 import { useReports } from '@/Contexts/report-context';
 import { DataStatusHandler } from "@/utils/DataStatusHandler";
 
-interface UserSalesData {
-  usuario: string;
-  totalVentasActual: number;
-  totalVentasAnterior: number;
-}
-
 const COLORES = {
   actual: '#22c55e',
-  anterior: '#16a34a',
+  anterior: '#c7db9c',
+};
+
+const formatNumber = (value: number): string => {
+  if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+  if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
+  return value.toLocaleString('es-EC');
 };
 
 const formatCurrency = (value: number) => {
-  return value.toLocaleString('es-EC', {
-    style: 'currency',
-    currency: 'USD',
-  });
+  return `$${formatNumber(value)}`;
+};
+
+const formatFullName = (fullName: string) => {
+  return fullName
+    .split(' ') 
+    .filter((part) => part.trim() !== '') 
+    .join(' '); 
 };
 
 const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
   if (active && payload?.length) {
-    const data = payload[0].payload as UserSalesData;
+    const data = payload[0].payload;
     return (
       <div className="bg-white p-3 rounded-md shadow-sm border border-gray-200">
         <p className="font-medium text-green-800">{data.usuario}</p>
         <div className="mt-2 space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[#22c55e]">●</span> {/* Color actual */}
+            <span className="text-[#22c55e]">●</span>
             <span className="text-xs ml-2">Actual:</span>
             <span className="text-xs font-semibold ml-2">
               {formatCurrency(data.totalVentasActual)}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-[#16a34a]">●</span> {/* Color anterior */}
+            <span className="text-[#c7db9c]">●</span>
             <span className="text-xs ml-2">Anterior:</span>
             <span className="text-xs font-semibold ml-2">
               {formatCurrency(data.totalVentasAnterior)}
@@ -50,26 +54,14 @@ const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
   return null;
 };
 
-const chartConfig = {
-  actual: {
-    label: "Período Actual",
-    color: COLORES.actual,
-  },
-  anterior: {
-    label: "Período Anterior",
-    color: COLORES.anterior,
-  },
-} satisfies ChartConfig;
-
 export function UserSalesChart() {
   const { ventas, ventasanterior, ventasLoading, ventasanteriorLoading, ventasError, ventasanteriorError } = useReports();
-  const isLoading = ventasLoading || ventasanteriorLoading;
-  const error = ventasError || ventasanteriorError;
+  const isLoading = ventasLoading && ventasanteriorLoading;
+  const error = ventasError && ventasanteriorError;
 
   const processData = (ventas: any[], ventasanterior: any[]) => {
     const users: Record<string, { actual: number; anterior: number }> = {};
 
-    // Procesar ventas del período actual
     ventas.forEach((venta) => {
       const usuario = venta.usuario || 'Sin especificar';
       if (!users[usuario]) {
@@ -78,7 +70,6 @@ export function UserSalesChart() {
       users[usuario].actual += venta.total;
     });
 
-    // Procesar ventas del período anterior
     ventasanterior.forEach((venta) => {
       const usuario = venta.usuario || 'Sin especificar';
       if (!users[usuario]) {
@@ -87,11 +78,10 @@ export function UserSalesChart() {
       users[usuario].anterior += venta.total;
     });
 
-    // Ordenar usuarios por ventas actuales (de mayor a menor)
     const sortedUsers = Object.entries(users)
       .sort(([, a], [, b]) => b.actual - a.actual)
       .map(([usuario, { actual, anterior }]) => ({
-        usuario,
+        usuario: formatFullName(usuario),
         totalVentasActual: actual,
         totalVentasAnterior: anterior,
       }));
@@ -103,78 +93,70 @@ export function UserSalesChart() {
     };
   };
 
-  const { usersData, totalGeneralActual, totalGeneralAnterior } = processData(ventas, ventasanterior);
+  const { usersData } = processData(ventas, ventasanterior);
 
   return (
-    <Card className="w-full h-[450px] shadow-sm border border-gray-200">
+    <Card className="w-full h-[500px] flex flex-col">
       <DataStatusHandler isLoading={isLoading} error={error}>
-        <CardHeader>
-          <div>
-            <CardTitle className="text-lg font-semibold">Ventas por Usuario</CardTitle>
-            <CardDescription className="text-sm text-gray-500">
-              Distribución de ventas por responsable (período actual vs. anterior)
-            </CardDescription>
-          </div>
+        <CardHeader className="pb-3">
+          <CardTitle>Ventas por Usuario</CardTitle>
+          <CardDescription>Distribución de ventas por responsable</CardDescription>
         </CardHeader>
-
-        <CardContent className="w-full h-[calc(450px-150px)] p-4">
-          <ChartContainer config={chartConfig} className="w-full h-full">
-            <BarChart
-              data={usersData}
-              margin={{ left: 12, right: 12, top: 20, bottom: 20 }}
-            >
-              <CartesianGrid vertical={false} strokeDasharray="3 3" />
-              <XAxis
-                dataKey="usuario"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                minTickGap={24}
-                tick={{ fontSize: 10 }}
-                textAnchor="end"
-              />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => formatCurrency(value)}
-              />
-              <ChartTooltip content={<CustomTooltip />} />
-              <ChartLegend content={<ChartLegendContent />} />
-              <Bar
-                dataKey="totalVentasActual"
-                fill={COLORES.actual}
-                radius={[4, 4, 0, 0]}
-                barSize={20}
-                name="Período Actual"
-              />
-              <Bar
-                dataKey="totalVentasAnterior"
-                fill={COLORES.anterior}
-                radius={[4, 4, 0, 0]}
-                barSize={20}
-                name="Período Anterior"
-              />
-            </BarChart>
-          </ChartContainer>
-        </CardContent>
-
-        <CardFooter className="flex flex-col gap-2 text-sm text-gray-500">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1">
-              <span className="block w-3 h-3" style={{ backgroundColor: COLORES.actual }}></span>
-              <span className="font-medium text-gray-800">
-                Período Actual: {formatCurrency(totalGeneralActual)}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="block w-3 h-3" style={{ backgroundColor: COLORES.anterior }}></span>
-              <span className="font-medium text-gray-800">
-                Período Anterior: {formatCurrency(totalGeneralAnterior)}
-              </span>
-            </div>
+        
+        <CardContent className="flex-1 overflow-y-auto p-1">
+          <div className="relative w-full h-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={usersData}
+                layout="vertical"
+                margin={{ top: 20, right: 30, left: -20, bottom: 5 }} 
+              >
+                <CartesianGrid horizontal={false} />
+                <XAxis
+                  type="number"
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={value => formatNumber(value)}
+                />
+                <YAxis
+                  dataKey="usuario"
+                  type="category"
+                  tickLine={false}
+                  axisLine={false}
+                  width={140}
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={value => 
+                    value.length > 15 ? `${value.substring(0, 12)}...` : value
+                  }
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<CustomTooltip />}
+                />
+                <Bar
+                  dataKey="totalVentasActual"
+                  fill={COLORES.actual}
+                  radius={[0, 4, 4, 0]}
+                  barSize={20}
+                >
+                  <LabelList
+                    dataKey="totalVentasActual"
+                    position="right"
+                    formatter={(value: number) => formatNumber(value)}
+                    fontSize={12}
+                    fill={COLORES.actual}
+                  />
+                </Bar>
+                <Bar
+                  dataKey="totalVentasAnterior"
+                  fill={COLORES.anterior}
+                  radius={[0, 4, 4, 0]}
+                  barSize={20}
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-          <div className="text-xs">{usersData.length} usuarios registrados</div>
-        </CardFooter>
+        </CardContent>
       </DataStatusHandler>
     </Card>
   );
