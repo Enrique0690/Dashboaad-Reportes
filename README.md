@@ -1,3 +1,8 @@
+# Como usar
+Para instalar las dependecias puedes usar el comando `npm instal`
+Para compilarlo en modo desarrolador `npm run dev`
+Para construir la app `npm run build`
+
 # Uso de Parámetros en la URL para la Generación de Reportes
 
 ## Descripción
