@@ -9,79 +9,37 @@ interface ReportData {
 interface ReportContextType {
   ventas: ReportData[];
   utilidad: ReportData[];
-  clientes: ReportData[];
-  pedidosAnulados: ReportData[];
   ventasFormasPago: ReportData[];
-  ventasArticulos: ReportData[];
   ventasanterior: ReportData[];
-  utilidadanterior: ReportData[];
-  clientesanterior: ReportData[];
-  pedidosAnuladosAnterior: ReportData[];
   ventasFormasPagoAnterior: ReportData[];
-  ventasArticulosAnterior: ReportData[];
   ventasLoading: boolean;
   utilidadLoading: boolean;
-  clientesLoading: boolean;
-  pedidosAnuladosLoading: boolean;
   ventasFormasPagoLoading: boolean;
-  ventasArticulosLoading: boolean;
   ventasanteriorLoading: boolean;
-  utilidadanteriorLoading: boolean;
-  clientesanteriorLoading: boolean;
-  pedidosAnuladosAnteriorLoading: boolean;
   ventasFormasPagoAnteriorLoading: boolean;
-  ventasArticulosAnteriorLoading: boolean;
   ventasError: string | null;
   utilidadError: string | null;
-  clientesError: string | null;
-  pedidosAnuladosError: string | null;
   ventasFormasPagoError: string | null;
-  ventasArticulosError: string | null;
   ventasanteriorError: string | null;
-  utilidadanteriorError: string | null;
-  clientesanteriorError: string | null;
-  pedidosAnuladosAnteriorError: string | null;
   ventasFormasPagoAnteriorError: string | null;
-  ventasArticulosAnteriorError: string | null;
 }
 
 const ReportContext = createContext<ReportContextType>({
   ventas: [],
   utilidad: [],
-  clientes: [],
-  pedidosAnulados: [],
   ventasFormasPago: [],
-  ventasArticulos: [],
   ventasanterior: [],
-  utilidadanterior: [],
-  clientesanterior: [],
-  pedidosAnuladosAnterior: [],
   ventasFormasPagoAnterior: [],
-  ventasArticulosAnterior: [],
   ventasLoading: false,
   utilidadLoading: false,
-  clientesLoading: false,
-  pedidosAnuladosLoading: false,
   ventasFormasPagoLoading: false,
-  ventasArticulosLoading: false,
   ventasanteriorLoading: false,
-  utilidadanteriorLoading: false,
-  clientesanteriorLoading: false,
-  pedidosAnuladosAnteriorLoading: false,
   ventasFormasPagoAnteriorLoading: false,
-  ventasArticulosAnteriorLoading: false,
   ventasError: null,
   utilidadError: null,
-  clientesError: null,
-  pedidosAnuladosError: null,
   ventasFormasPagoError: null,
-  ventasArticulosError: null,
   ventasanteriorError: null,
-  utilidadanteriorError: null,
-  clientesanteriorError: null,
-  pedidosAnuladosAnteriorError: null,
   ventasFormasPagoAnteriorError: null,
-  ventasArticulosAnteriorError: null,
 });
 
 export function ReportProvider({ children }: { children: React.ReactNode }) {
@@ -93,42 +51,21 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
   const { dateRange } = useDateRange();
   const [ventas, setVentas] = useState<ReportData[]>([]);
   const [utilidad, setUtilidad] = useState<ReportData[]>([]);
-  const [clientes, setClientes] = useState<ReportData[]>([]);
-  const [pedidosAnulados, setPedidosAnulados] = useState<ReportData[]>([]);
   const [ventasFormasPago, setVentasFormasPago] = useState<ReportData[]>([]);
-  const [ventasArticulos, setVentasArticulos] = useState<ReportData[]>([]);
   const [ventasanterior, setVentasanterior] = useState<ReportData[]>([]);
-  const [utilidadanterior, setUtilidadanterior] = useState<ReportData[]>([]);
-  const [clientesanterior, setClientesanterior] = useState<ReportData[]>([]);
-  const [pedidosAnuladosAnterior, setPedidosAnuladosAnterior] = useState<ReportData[]>([]);
   const [ventasFormasPagoAnterior, setVentasFormasPagoAnterior] = useState<ReportData[]>([]);
-  const [ventasArticulosAnterior, setVentasArticulosAnterior] = useState<ReportData[]>([]);
 
   const [ventasLoading, setVentasLoading] = useState(false);
   const [utilidadLoading, setUtilidadLoading] = useState(false);
-  const [clientesLoading, setClientesLoading] = useState(false);
-  const [pedidosAnuladosLoading, setPedidosAnuladosLoading] = useState(false);
   const [ventasFormasPagoLoading, setVentasFormasPagoLoading] = useState(false);
-  const [ventasArticulosLoading, setVentasArticulosLoading] = useState(false);
   const [ventasanteriorLoading, setVentasanteriorLoading] = useState(false);
-  const [utilidadanteriorLoading, setUtilidadanteriorLoading] = useState(false);
-  const [clientesanteriorLoading, setClientesanteriorLoading] = useState(false);
-  const [pedidosAnuladosAnteriorLoading, setPedidosAnuladosAnteriorLoading] = useState(false);
   const [ventasFormasPagoAnteriorLoading, setVentasFormasPagoAnteriorLoading] = useState(false);
-  const [ventasArticulosAnteriorLoading, setVentasArticulosAnteriorLoading] = useState(false);
 
   const [ventasError, setVentasError] = useState<string | null>(null);
   const [utilidadError, setUtilidadError] = useState<string | null>(null);
-  const [clientesError, setClientesError] = useState<string | null>(null);
-  const [pedidosAnuladosError, setPedidosAnuladosError] = useState<string | null>(null);
   const [ventasFormasPagoError, setVentasFormasPagoError] = useState<string | null>(null);
-  const [ventasArticulosError, setVentasArticulosError] = useState<string | null>(null);
   const [ventasanteriorError, setVentasanteriorError] = useState<string | null>(null);
-  const [utilidadanteriorError, setUtilidadanteriorError] = useState<string | null>(null);
-  const [clientesanteriorError, setClientesanteriorError] = useState<string | null>(null);
-  const [pedidosAnuladosAnteriorError, setPedidosAnuladosAnteriorError] = useState<string | null>(null);
   const [ventasFormasPagoAnteriorError, setVentasFormasPagoAnteriorError] = useState<string | null>(null);
-  const [ventasArticulosAnteriorError, setVentasArticulosAnteriorError] = useState<string | null>(null);
 
   const filterReports = (data: ReportData[]): ReportData[] => {
     return data.filter(item => 
@@ -224,40 +161,19 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
       value={{
         ventas,
         utilidad,
-        clientes,
-        pedidosAnulados,
         ventasFormasPago,
-        ventasArticulos,
         ventasanterior,
-        utilidadanterior,
-        clientesanterior,
-        pedidosAnuladosAnterior,
         ventasFormasPagoAnterior,
-        ventasArticulosAnterior,
         ventasLoading,
         utilidadLoading,
-        clientesLoading,
-        pedidosAnuladosLoading,
         ventasFormasPagoLoading,
-        ventasArticulosLoading,
         ventasanteriorLoading,
-        utilidadanteriorLoading,
-        clientesanteriorLoading,
-        pedidosAnuladosAnteriorLoading,
         ventasFormasPagoAnteriorLoading,
-        ventasArticulosAnteriorLoading,
         ventasError,
         utilidadError,
-        clientesError,
-        pedidosAnuladosError,
         ventasFormasPagoError,
-        ventasArticulosError,
         ventasanteriorError,
-        utilidadanteriorError,
-        clientesanteriorError,
-        pedidosAnuladosAnteriorError,
-        ventasFormasPagoAnteriorError,
-        ventasArticulosAnteriorError,
+        ventasFormasPagoAnteriorError
       }}
     >
       {children}

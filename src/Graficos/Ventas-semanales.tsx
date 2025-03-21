@@ -101,7 +101,7 @@ export function WeeklySalesComparison() {
   const data = processData(ventas, startDate, endDate);
 
   return (
-    <Card className="w-full h-[450px] shadow-sm border border-gray-200 overflow-hidden">
+    <Card className="w-full h-[500px] shadow-sm border border-gray-200 overflow-hidden">
       <DataStatusHandler isLoading={ventasLoading} error={ventasError}>
         <CardHeader className="pb-2">
           <div>

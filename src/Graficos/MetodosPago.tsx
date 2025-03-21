@@ -147,7 +147,7 @@ export function PaymentMethodsChart() {
   const { data, chartConfig } = processData(ventasFormasPago, dateRange?.from, dateRange?.to);
 
   return (
-    <Card className="w-full h-full shadow-sm border border-gray-200 flex flex-col">
+    <Card className="w-full h-[500px] shadow-sm border border-gray-200 flex flex-col">
       <DataStatusHandler isLoading={ventasFormasPagoLoading} error={ventasFormasPagoError}>
         <CardHeader className="items-center w-full text-center -mb-8">
           <CardTitle className="text-lg font-semibold">Métodos de Pago</CardTitle>

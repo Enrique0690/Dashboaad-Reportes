@@ -92,9 +92,11 @@ export function TicketPromedioChart() {
   const error = ventasError || ventasanteriorError;
   const isLoading = ventasLoading || ventasanteriorLoading;
 
-  // Calcular el ancho mínimo basado en la cantidad de usuarios
-  const minContainerWidth = Math.max(data.length * 120, 400); // 120px por usuario mínimo
-  const showScroll = data.length > 4;
+  // Definir el número máximo de usuarios visibles sin activar scroll
+  const maxVisibleUsers = 3;
+
+  // Calcular la anchura mínima del gráfico: 120px por usuario, con un máximo de 3 usuarios visibles sin scroll
+  const minContainerWidth = Math.max(data.length <= maxVisibleUsers ? data.length * 120 : maxVisibleUsers * 120, 400);
 
   return (
     <Card className="h-[500px] flex flex-col">
@@ -107,7 +109,10 @@ export function TicketPromedioChart() {
           <ChartContainer 
             config={chartConfig} 
             className="h-full flex-1"
-            style={{ minWidth: `${minContainerWidth}px` }}
+            style={{
+              minWidth: `${minContainerWidth}px`,
+              overflowX: data.length > maxVisibleUsers ? 'auto' : 'visible',
+            }}
           >
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
