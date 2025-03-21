@@ -91,11 +91,7 @@ export function TicketPromedioChart() {
   const data = processData(ventas, ventasanterior);
   const error = ventasError || ventasanteriorError;
   const isLoading = ventasLoading || ventasanteriorLoading;
-
-  // Definir el número máximo de usuarios visibles sin activar scroll
   const maxVisibleUsers = 3;
-
-  // Calcular la anchura mínima del gráfico: 120px por usuario, con un máximo de 3 usuarios visibles sin scroll
   const minContainerWidth = Math.max(data.length <= maxVisibleUsers ? data.length * 120 : maxVisibleUsers * 120, 400);
 
   return (
@@ -105,7 +101,7 @@ export function TicketPromedioChart() {
           <CardTitle>Ticket Promedio por Usuario</CardTitle>
           <CardDescription>Comparación del período actual vs. anterior</CardDescription>
         </CardHeader>
-        <CardContent className="h-full flex flex-col justify-between overflow-x-auto">
+        <CardContent className="h-full flex flex-col justify-between p-2 overflow-x-auto"> {/* Reducir el padding aquí */}
           <ChartContainer 
             config={chartConfig} 
             className="h-full flex-1"
@@ -117,33 +113,33 @@ export function TicketPromedioChart() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={data}
-                margin={{ top: 20, right: 30, left: 20, bottom: data.length > 4 ? 50 : 10 }}
-                barCategoryGap="15%"
+                margin={{ top: 10, right: 10, left: 10, bottom: data.length > 4 ? 20 : 10 }} 
+                barCategoryGap="8%" 
               >
                 <CartesianGrid vertical={false} />
                 <XAxis
                   dataKey="usuario"
                   tickLine={false}
-                  tickMargin={10}
+                  tickMargin={5}  
                   axisLine={false}
                   interval={0}
-                  angle={-25}
+                  angle={-20}  
                   textAnchor="end"
-                  fontSize={12}
-                  height={data.length > 4 ? 80 : 60}
+                  fontSize={10} 
+                  height={data.length > 4 ? 60 : 50} 
                 />
                 <ChartTooltip cursor={false} content={<CustomTooltip />} />
                 <Bar
                   dataKey="ticketPromedioActual"
                   fill={COLORES.actual}
                   radius={4}
-                  barSize={32}
+                  barSize={30}  
                 />
                 <Bar
                   dataKey="ticketPromedioAnterior"
                   fill={COLORES.anterior}
                   radius={4}
-                  barSize={32}
+                  barSize={30}  
                 />
               </BarChart>
             </ResponsiveContainer>

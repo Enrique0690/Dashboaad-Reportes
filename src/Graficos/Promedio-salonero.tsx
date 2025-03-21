@@ -109,7 +109,7 @@ export function UserSalesChart() {
               <BarChart
                 data={usersData}
                 layout="vertical"
-                margin={{ top: 20, right: 30, left: -20, bottom: 5 }} 
+                margin={{ top: 20, right: 30, left: -50, bottom: 5 }} 
               >
                 <CartesianGrid horizontal={false} />
                 <XAxis
