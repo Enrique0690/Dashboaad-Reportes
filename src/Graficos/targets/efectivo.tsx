@@ -4,15 +4,17 @@ import { DataStatusHandler } from "@/utils/DataStatusHandler";
 import { ArrowUp, ArrowDown } from "lucide-react"; 
 
 export function TotalEfectivoCard() {
-  const { ventasFormasPago, ventasFormasPagoAnterior, ventasFormasPagoLoading, ventasFormasPagoError } = useReports();
-  const ventasValidas = Array.isArray(ventasFormasPago)
-    ? ventasFormasPago.filter(venta => {
+  const { ventasFormasPago, ventasFormasPagoAnterior} = useReports();
+  const isLoading = ventasFormasPago.loading || ventasFormasPagoAnterior.loading;
+  const error = ventasFormasPago.error || ventasFormasPagoAnterior.error;
+  const ventasValidas = Array.isArray(ventasFormasPago.data)
+    ? ventasFormasPago.data.filter(venta => {
         const formaPago = typeof venta.FormaPago === 'string' ? venta.FormaPago.toLowerCase() : '';
         return formaPago === "efectivo" && venta.Estado === "ACTIVO";
       })
     : [];
-  const ventasAnteriorValidas = Array.isArray(ventasFormasPagoAnterior)
-    ? ventasFormasPagoAnterior.filter(venta => {
+  const ventasAnteriorValidas = Array.isArray(ventasFormasPagoAnterior.data)
+    ? ventasFormasPagoAnterior.data.filter(venta => {
         const formaPago = typeof venta.FormaPago === 'string' ? venta.FormaPago.toLowerCase() : '';
         return formaPago === "efectivo" && venta.Estado === "ACTIVO";
       })
@@ -29,10 +31,13 @@ export function TotalEfectivoCard() {
   const efectivoAumento = diferenciaEfectivo > 0;
   const efectivoDisminuyo = diferenciaEfectivo < 0;
   const diferenciaTransacciones = ventasValidas.length - ventasAnteriorValidas.length;
+  console.log(ventasValidas.length);
+  console.log(ventasAnteriorValidas.length);
+  console.log(diferenciaTransacciones);
 
   return (
     <Card className="w-full h-full">
-      <DataStatusHandler isLoading={ventasFormasPagoLoading} error={ventasFormasPagoError}>
+      <DataStatusHandler isLoading={isLoading} error={error}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 -mb-5">
           <CardTitle className="text-sm font-medium text-gray-400">
             Total en Efectivo

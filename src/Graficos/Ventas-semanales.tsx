@@ -63,6 +63,13 @@ const processData = (ventas: any[], startDate: Date, endDate: Date): ProcessedDa
   }));
 };
 
+const getDateInterval = (startDate: Date, endDate: Date): number => {
+  const diffInDays = (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24);
+  if (diffInDays <= 30) return 1; 
+  if (diffInDays <= 90) return 5; 
+  return 15; 
+};
+
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload?.length) {
     const data = payload[0].payload as ProcessedData;
@@ -83,7 +90,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export function WeeklySalesComparison() {
   const { dateRange } = useDateRange();
-  const { ventas, ventasLoading, ventasError } = useReports();
+  const { ventas } = useReports();
   const startDate = dateRange?.from || new Date();
   const endDate = dateRange?.to || new Date();
 
@@ -97,12 +104,12 @@ export function WeeklySalesComparison() {
       color: COLORES.actual,
     },
   } satisfies ChartConfig;
-
-  const data = processData(ventas, startDate, endDate);
+  const dateInterval = getDateInterval(startDate, endDate);
+  const data = processData(ventas.data, startDate, endDate);
 
   return (
     <Card className="w-full h-[500px] shadow-sm border border-gray-200 overflow-hidden">
-      <DataStatusHandler isLoading={ventasLoading} error={ventasError}>
+      <DataStatusHandler isLoading={ventas.loading} error={ventas.error}>
         <CardHeader className="pb-2">
           <div>
             <CardTitle className="text-lg font-semibold">Ventas por Fecha</CardTitle>
@@ -127,7 +134,7 @@ export function WeeklySalesComparison() {
                   angle={-45}
                   textAnchor="end"
                   tickMargin={35} // Aumentamos espacio para ticks
-                  interval={0}
+                  interval={dateInterval}
                   style={{
                     fontSize: '0.75rem', 
                     whiteSpace: 'nowrap'

@@ -4,15 +4,15 @@ import { DataStatusHandler } from "@/utils/DataStatusHandler";
 import { ArrowUp, ArrowDown } from "lucide-react"; 
 
 export function ConsumoPromedioCard() {
-  const { ventas, ventasanterior, ventasLoading, ventasError } = useReports();
-  const ventasActivas = Array.isArray(ventas)
-    ? ventas.filter(venta => 
+  const { ventas, ventasanterior } = useReports();
+  const ventasActivas = Array.isArray(ventas.data)
+    ? ventas.data.filter(venta => 
         venta.estado === "ACTIVO" && 
         (venta.documento === "FACTURA" || venta.documento === "NOTA DE ENTREGA")
       )
     : [];
-  const ventasAnteriorActivas = Array.isArray(ventasanterior)
-    ? ventasanterior.filter(venta => 
+  const ventasAnteriorActivas = Array.isArray(ventasanterior.data)
+    ? ventasanterior.data.filter(venta => 
         venta.estado === "ACTIVO" && 
         (venta.documento === "FACTURA" || venta.documento === "NOTA DE ENTREGA")
       )
@@ -25,7 +25,7 @@ export function ConsumoPromedioCard() {
 
   return (
     <Card className="w-full h-full">
-      <DataStatusHandler isLoading={ventasLoading} error={ventasError}>
+      <DataStatusHandler isLoading={ventas.loading} error={ventas.error}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 -mb-5">
           <CardTitle className="text-sm font-medium text-gray-400">
             Consumo Promedio por Persona
@@ -53,12 +53,10 @@ export function ConsumoPromedioCard() {
 }
 
 function calcularConsumoPromedio(ventas: any) {
-  if (ventas.length === 0) return 0;
+  const totalPax = ventas.reduce((sum: number, venta: any) => sum + (venta.pax > 0 ? venta.pax : 1), 0);
+  if (totalPax === 0) return 0;
 
-  const totalConsumo = ventas.reduce((sum: any, venta: any) => {
-    const pax = venta.pax !== null && venta.pax > 0 ? venta.pax : 1; 
-    return sum + (venta.total / pax);
-  }, 0);
+  const totalConsumo = ventas.reduce((sum: number, venta: any) => sum + venta.total, 0);
 
-  return totalConsumo / ventas.length;
+  return totalConsumo / totalPax;
 }

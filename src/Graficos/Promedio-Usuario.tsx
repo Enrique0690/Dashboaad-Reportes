@@ -44,33 +44,39 @@ const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
   return null;
 };
 const processData = (ventas: any[], ventasanterior: any[]) => {
-  const usuarios: Record<string, { totalVentasActual: number; transaccionesActual: number; totalVentasAnterior: number; transaccionesAnterior: number }> = {};
+  const usuarios: Record<string, { totalVentasActual: number; totalPaxActual: number; totalVentasAnterior: number; totalPaxAnterior: number }> = {};
 
   ventas.forEach((venta) => {
     const usuario = venta.usuario || 'Sin especificar';
     const total = typeof venta.total === 'number' ? venta.total : 0;
+    const pax = venta.pax > 0 ? venta.pax : 1; 
+
     if (!usuarios[usuario]) {
-      usuarios[usuario] = { totalVentasActual: 0, transaccionesActual: 0, totalVentasAnterior: 0, transaccionesAnterior: 0 };
+      usuarios[usuario] = { totalVentasActual: 0, totalPaxActual: 0, totalVentasAnterior: 0, totalPaxAnterior: 0 };
     }
+
     usuarios[usuario].totalVentasActual += total;
-    usuarios[usuario].transaccionesActual += 1;
+    usuarios[usuario].totalPaxActual += pax;
   });
 
   ventasanterior.forEach((venta) => {
     const usuario = venta.usuario || 'Sin especificar';
     const total = typeof venta.total === 'number' ? venta.total : 0;
+    const pax = venta.pax > 0 ? venta.pax : 1; 
+
     if (!usuarios[usuario]) {
-      usuarios[usuario] = { totalVentasActual: 0, transaccionesActual: 0, totalVentasAnterior: 0, transaccionesAnterior: 0 };
+      usuarios[usuario] = { totalVentasActual: 0, totalPaxActual: 0, totalVentasAnterior: 0, totalPaxAnterior: 0 };
     }
+
     usuarios[usuario].totalVentasAnterior += total;
-    usuarios[usuario].transaccionesAnterior += 1;
+    usuarios[usuario].totalPaxAnterior += pax;
   });
 
   return Object.entries(usuarios)
-    .map(([usuario, { totalVentasActual, transaccionesActual, totalVentasAnterior, transaccionesAnterior }]) => ({
+    .map(([usuario, { totalVentasActual, totalPaxActual, totalVentasAnterior, totalPaxAnterior }]) => ({
       usuario,
-      ticketPromedioActual: transaccionesActual > 0 ? totalVentasActual / transaccionesActual : 0,
-      ticketPromedioAnterior: transaccionesAnterior > 0 ? totalVentasAnterior / transaccionesAnterior : 0,
+      ticketPromedioActual: totalPaxActual > 0 ? totalVentasActual / totalPaxActual : 0,
+      ticketPromedioAnterior: totalPaxAnterior > 0 ? totalVentasAnterior / totalPaxAnterior : 0,
     }))
     .sort((a, b) => b.ticketPromedioActual - a.ticketPromedioActual);
 };
@@ -87,13 +93,13 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function TicketPromedioChart() {
-  const { ventas, ventasanterior, ventasLoading, ventasanteriorLoading, ventasError, ventasanteriorError } = useReports();
-  const data = processData(ventas, ventasanterior);
-  const error = ventasError || ventasanteriorError;
-  const isLoading = ventasLoading || ventasanteriorLoading;
-  const maxVisibleUsers = 3;
-  const minContainerWidth = Math.max(data.length <= maxVisibleUsers ? data.length * 120 : maxVisibleUsers * 120, 400);
-
+  const { ventas, ventasanterior } = useReports();
+  const data = processData(ventas.data, ventasanterior.data);
+  const error = ventas.error || ventasanterior.error;
+  const isLoading = ventas.loading || ventasanterior.loading;
+  const maxVisibleUsers = 4; 
+  const userWidth = 65; 
+  const minContainerWidth = Math.max(data.length * userWidth, maxVisibleUsers * userWidth)
   return (
     <Card className="h-[500px] flex flex-col">
       <DataStatusHandler isLoading={isLoading} error={error}>
@@ -101,7 +107,7 @@ export function TicketPromedioChart() {
           <CardTitle>Ticket Promedio por Usuario</CardTitle>
           <CardDescription>Comparación del período actual vs. anterior</CardDescription>
         </CardHeader>
-        <CardContent className="h-full flex flex-col justify-between p-2 overflow-x-auto"> {/* Reducir el padding aquí */}
+        <CardContent className="h-full flex flex-col justify-between overflow-x-auto -mb-3"> 
           <ChartContainer 
             config={chartConfig} 
             className="h-full flex-1"
@@ -111,10 +117,11 @@ export function TicketPromedioChart() {
             }}
           >
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
+            <BarChart
                 data={data}
                 margin={{ top: 10, right: 10, left: 10, bottom: data.length > 4 ? 20 : 10 }} 
-                barCategoryGap="8%" 
+                barCategoryGap="20%"  
+                barGap={1}            
               >
                 <CartesianGrid vertical={false} />
                 <XAxis
@@ -123,23 +130,23 @@ export function TicketPromedioChart() {
                   tickMargin={5}  
                   axisLine={false}
                   interval={0}
-                  angle={-20}  
+                  angle={-40}  
                   textAnchor="end"
                   fontSize={10} 
-                  height={data.length > 4 ? 60 : 50} 
+                  height={80} 
                 />
                 <ChartTooltip cursor={false} content={<CustomTooltip />} />
                 <Bar
                   dataKey="ticketPromedioActual"
                   fill={COLORES.actual}
                   radius={4}
-                  barSize={30}  
+                  barSize={25}  
                 />
                 <Bar
                   dataKey="ticketPromedioAnterior"
                   fill={COLORES.anterior}
                   radius={4}
-                  barSize={30}  
+                  barSize={25}  
                 />
               </BarChart>
             </ResponsiveContainer>

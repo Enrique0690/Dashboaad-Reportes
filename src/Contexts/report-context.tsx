@@ -1,45 +1,29 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, SetStateAction } from 'react';
 import { useDateRange } from './date-range-context';
 import { useSearchParams } from 'react-router-dom';
 
-interface ReportData {
-  [key: string]: any;
+interface ReportState {
+  data: any[];
+  loading: boolean;
+  error: string | null;
 }
 
 interface ReportContextType {
-  ventas: ReportData[];
-  utilidad: ReportData[];
-  ventasFormasPago: ReportData[];
-  ventasanterior: ReportData[];
-  ventasFormasPagoAnterior: ReportData[];
-  ventasLoading: boolean;
-  utilidadLoading: boolean;
-  ventasFormasPagoLoading: boolean;
-  ventasanteriorLoading: boolean;
-  ventasFormasPagoAnteriorLoading: boolean;
-  ventasError: string | null;
-  utilidadError: string | null;
-  ventasFormasPagoError: string | null;
-  ventasanteriorError: string | null;
-  ventasFormasPagoAnteriorError: string | null;
+  ventas: ReportState;
+  ventasArticulos: ReportState;
+  ventasFormasPago: ReportState;
+  ventasanterior: ReportState;
+  ventasFormasPagoAnterior: ReportState;
 }
 
+const initialState: ReportState = { data: [], loading: false, error: null };
+
 const ReportContext = createContext<ReportContextType>({
-  ventas: [],
-  utilidad: [],
-  ventasFormasPago: [],
-  ventasanterior: [],
-  ventasFormasPagoAnterior: [],
-  ventasLoading: false,
-  utilidadLoading: false,
-  ventasFormasPagoLoading: false,
-  ventasanteriorLoading: false,
-  ventasFormasPagoAnteriorLoading: false,
-  ventasError: null,
-  utilidadError: null,
-  ventasFormasPagoError: null,
-  ventasanteriorError: null,
-  ventasFormasPagoAnteriorError: null,
+  ventas: initialState,
+  ventasArticulos: initialState,
+  ventasFormasPago: initialState,
+  ventasanterior: initialState,
+  ventasFormasPagoAnterior: initialState,
 });
 
 export function ReportProvider({ children }: { children: React.ReactNode }) {
@@ -49,133 +33,99 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
   const deviceID = searchParams.get('deviceID');
 
   const { dateRange } = useDateRange();
-  const [ventas, setVentas] = useState<ReportData[]>([]);
-  const [utilidad, setUtilidad] = useState<ReportData[]>([]);
-  const [ventasFormasPago, setVentasFormasPago] = useState<ReportData[]>([]);
-  const [ventasanterior, setVentasanterior] = useState<ReportData[]>([]);
-  const [ventasFormasPagoAnterior, setVentasFormasPagoAnterior] = useState<ReportData[]>([]);
 
-  const [ventasLoading, setVentasLoading] = useState(false);
-  const [utilidadLoading, setUtilidadLoading] = useState(false);
-  const [ventasFormasPagoLoading, setVentasFormasPagoLoading] = useState(false);
-  const [ventasanteriorLoading, setVentasanteriorLoading] = useState(false);
-  const [ventasFormasPagoAnteriorLoading, setVentasFormasPagoAnteriorLoading] = useState(false);
-
-  const [ventasError, setVentasError] = useState<string | null>(null);
-  const [utilidadError, setUtilidadError] = useState<string | null>(null);
-  const [ventasFormasPagoError, setVentasFormasPagoError] = useState<string | null>(null);
-  const [ventasanteriorError, setVentasanteriorError] = useState<string | null>(null);
-  const [ventasFormasPagoAnteriorError, setVentasFormasPagoAnteriorError] = useState<string | null>(null);
-
-  const filterReports = (data: ReportData[]): ReportData[] => {
-    return data.filter(item => 
-      (item.documento === "NOTA DE ENTREGA" || item.documento === "FACTURA") &&
-      item.estado === "ACTIVO"
-    );
-  };
+  const [ventas, setVentas] = useState<ReportState>(initialState);
+  const [ventasArticulos, setVentasArticulos] = useState<ReportState>(initialState);
+  const [ventasFormasPago, setVentasFormasPago] = useState<ReportState>(initialState);
+  const [ventasanterior, setVentasanterior] = useState<ReportState>(initialState);
+  const [ventasFormasPagoAnterior, setVentasFormasPagoAnterior] = useState<ReportState>(initialState);
 
   useEffect(() => {
-    if (!dateRange?.from || !dateRange?.to) return;
+    if (!dateRange?.from || !dateRange?.to || !urlServicio) return;
 
     const fetchReports = async () => {
-      const formData = {
-        datetime: 1,
-        desde: `${dateRange.from!.toISOString().split('T')[0]} 00:00`,
-        hasta: `${dateRange.to!.toISOString().split('T')[0]} 23:59`,
-        tablet: {
-          deviceID,
-          usuario: idUsuario,
-          bodega: 1,
-          fecha: new Date().toISOString(),
-        },
+      const currentStart = new Date(dateRange.from!);
+      const currentEnd = new Date(dateRange.to!);
+      const rangeDuration = currentEnd.getTime() - currentStart.getTime();
+      const previousStart = new Date(currentStart.getTime() - rangeDuration);
+
+      const PeridoCombinado = {
+        desde: `${previousStart.toISOString().split('T')[0]} 00:00`,
+        hasta: `${currentEnd.toISOString().split('T')[0]} 23:59`,
       };
 
-      const rangeDuration = dateRange.to!.getTime() - dateRange.from!.getTime();
-      const previousRangeFrom = new Date(dateRange.from!.getTime() - rangeDuration);
-      const previousRangeTo = new Date(dateRange.to!.getTime() - rangeDuration);
-
-      const formDataAnterior = {
-        datetime: 1,
-        desde: `${previousRangeFrom.toISOString().split('T')[0]} 00:00`,
-        hasta: `${previousRangeTo.toISOString().split('T')[0]} 23:59`,
-        tablet: {
-          deviceID,
-          usuario: idUsuario,
-          bodega: 1,
-          fecha: new Date().toISOString(),
-        },
+      const PeridoActual = {
+        desde: `${currentStart.toISOString().split('T')[0]} 00:00`,
+        hasta: `${currentEnd.toISOString().split('T')[0]} 23:59`,
       };
 
-      const fetchData = async (
+      const fetchCombinedData = async (
         endpoint: string,
-        setter: (data: ReportData[]) => void,
-        loadingSetter: (loading: boolean) => void,
-        errorSetter: (error: string | null) => void,
-        formData: any
+        fechas: { desde: string; hasta: string },
+        setCurrentState: React.Dispatch<SetStateAction<ReportState>>,
+        setPreviousState?: React.Dispatch<SetStateAction<ReportState>> 
       ) => {
-        loadingSetter(true);
-        errorSetter(null);
-      
-        if (!urlServicio) {
-          errorSetter('URL de servicio no proporcionada');
-          loadingSetter(false);
-          return;
-        }
-      
         try {
+          setCurrentState(prev => ({ ...prev, loading: true, error: null }));
+          if (setPreviousState) setPreviousState(prev => ({ ...prev, loading: true, error: null }));
+      
+          const formData = {
+            datetime: 1,
+            desde: fechas.desde,
+            hasta: fechas.hasta,
+            tablet: {
+              deviceID,
+              usuario: idUsuario,
+              bodega: 1,
+              fecha: new Date().toISOString(),
+            },
+          };
+      
           const url = new URL(`LOCAL_NETWORK/REPORTES/${endpoint}`, urlServicio).toString();
           const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData),
           });
+      
+          if (!response.ok) throw new Error('Error en la respuesta del servidor');
+      
           const data = await response.json();
-          setter(Array.isArray(data) ? data : []);
-        } catch (err) {
-          errorSetter('Error al obtener reportes');
-        } finally {
-          loadingSetter(false);
-        }
-      };
-
-      await Promise.allSettled([
-        fetchData('VENTAS', (data) => setVentas(filterReports(data)), setVentasLoading, setVentasError, formData),
-        fetchData('UTILIDAD', setUtilidad, setUtilidadLoading, setUtilidadError, formData),
-        fetchData('VENTAS_FORMASPAGO', setVentasFormasPago, setVentasFormasPagoLoading, setVentasFormasPagoError, formData),
-        fetchData('VENTAS', (data) => setVentasanterior(filterReports(data)), setVentasanteriorLoading, setVentasanteriorError, formDataAnterior),
-        fetchData('VENTAS_FORMASPAGO', setVentasFormasPagoAnterior, setVentasFormasPagoAnteriorLoading, setVentasFormasPagoAnteriorError, formDataAnterior),
-      ]).then((results) => {
-        results.forEach((result, index) => {
-          if (result.status === 'rejected') {
-            console.error(`La consulta ${index} falló:`, result.reason);
+      
+          if (setPreviousState) {
+            const dataActual = data.filter((item: { fechaCreacion: any; fechaEmision: any }) => {
+              const fecha = new Date(item.fechaCreacion || item.fechaEmision);
+              return fecha >= currentStart && fecha <= currentEnd;
+            });
+            const dataAnterior = data.filter((item: { fechaCreacion: any; fechaEmision: any }) => {
+              const fecha = new Date(item.fechaCreacion || item.fechaEmision);
+              return fecha >= previousStart && fecha < currentStart;
+            });
+  
+            setCurrentState({ data: dataActual, loading: false, error: null });
+            setPreviousState({ data: dataAnterior, loading: false, error: null });
+          } else {
+            setCurrentState({ data, loading: false, error: null });
           }
-        });
-      });
+        } catch (error) {
+          setCurrentState({ data: [], loading: false, error: error instanceof Error ? error.message : 'Error desconocido' });
+          if (setPreviousState) {
+            setPreviousState({ data: [], loading: false, error: error instanceof Error ? error.message : 'Error desconocido' });
+          }
+        }
+      };      
+      await Promise.allSettled([
+        fetchCombinedData('VENTAS', PeridoCombinado, setVentas, setVentasanterior),
+        fetchCombinedData('VENTAS_FORMASPAGO', PeridoCombinado, setVentasFormasPago, setVentasFormasPagoAnterior),
+        fetchCombinedData('VENTAS_ARTICULOS', PeridoActual, setVentasArticulos)
+      ]);
     };
 
     fetchReports();
-  }, [dateRange]);
+  }, [dateRange, urlServicio, idUsuario, deviceID]);
 
   return (
-    <ReportContext.Provider
-      value={{
-        ventas,
-        utilidad,
-        ventasFormasPago,
-        ventasanterior,
-        ventasFormasPagoAnterior,
-        ventasLoading,
-        utilidadLoading,
-        ventasFormasPagoLoading,
-        ventasanteriorLoading,
-        ventasFormasPagoAnteriorLoading,
-        ventasError,
-        utilidadError,
-        ventasFormasPagoError,
-        ventasanteriorError,
-        ventasFormasPagoAnteriorError
-      }}
-    >
+    <ReportContext.Provider value={{ ventas, ventasArticulos, ventasFormasPago, ventasanterior, ventasFormasPagoAnterior }}>
       {children}
     </ReportContext.Provider>
   );

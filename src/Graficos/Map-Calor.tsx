@@ -15,13 +15,13 @@ const COLORES = [
 ];
 
 export function BusinessActivityHeatmap() {
-  const { ventas, ventasLoading, ventasError } = useReports();
+  const { ventas} = useReports();
 
   const { heatmapData, hoursWithSales } = useMemo(() => {
     const data: Record<string, number[]> = {};
     const hoursWithSales = new Set<number>();
 
-    ventas.forEach((venta) => {
+    ventas.data.forEach((venta) => {
       const fecha = new Date(venta.fechaCreacion);
       const day = fecha.getDay(); 
       const hour = fecha.getHours();
@@ -51,7 +51,7 @@ export function BusinessActivityHeatmap() {
 
   return (
     <Card className="w-full h-full flex flex-col">
-      <DataStatusHandler isLoading={ventasLoading} error={ventasError}>
+      <DataStatusHandler isLoading={ventas.loading} error={ventas.error}>
         <CardHeader className="flex justify-between items-center">
           <div className="flex flex-col">
             <CardTitle>Actividad del negocio</CardTitle>

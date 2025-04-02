@@ -4,7 +4,7 @@ import {  ChartConfig,  ChartContainer,  ChartTooltip,  ChartTooltipContent} fro
 import { useReports } from "@/Contexts/report-context";
 import { useState } from "react";
 import { DataStatusHandler } from "@/utils/DataStatusHandler";
-// Definir colores para cada barra del gráfico
+
 const COLORS = [
   "#2563eb",
   "#60a5fa",
@@ -15,7 +15,6 @@ const COLORS = [
   "#d1d5db",
 ];
 
-// Configuración del gráfico
 const chartConfig = {
   cantidad: {
     label: "Cantidad Vendida",
@@ -26,15 +25,14 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function TopProductsChart() {
-  const { utilidad, utilidadLoading, utilidadError } = useReports();
+  const { ventasArticulos } = useReports();
   const [sortBy, setSortBy] = useState<"cantidad" | "neto">("cantidad");
 
-  // Procesar los datos para obtener los productos más vendidos
   const processData = (ventas: any[]) => {
     const products: Record<string, { cantidad: number; neto: number }> = {};
 
     ventas.forEach((venta) => {
-      const producto = venta.articulo || "Sin especificar";
+      const producto = venta.descripcion || "Sin especificar";
       if (!products[producto]) {
         products[producto] = { cantidad: 0, neto: 0 };
       }
@@ -42,25 +40,24 @@ export function TopProductsChart() {
       products[producto].neto += venta.neto;
     });
 
-    // Convertir a array y ordenar
     const sortedProducts = Object.entries(products)
       .sort(([, a], [, b]) => (sortBy === "cantidad" ? b.cantidad - a.cantidad : b.neto - a.neto))
-      .slice(0, 6) // Tomar solo los 6 primeros
+      .slice(0, 6)
       .map(([producto, { cantidad, neto }], index) => ({
         producto,
         cantidad,
         neto,
-        fill: COLORS[index % COLORS.length], 
+        fill: COLORS[index % COLORS.length],
       }));
 
     return sortedProducts;
   };
 
-  const chartData = processData(utilidad);
+  const chartData = processData(ventasArticulos.data);
 
   return (
     <Card className="w-full h-full flex flex-col">
-      <DataStatusHandler isLoading={utilidadLoading} error={utilidadError}>
+      <DataStatusHandler isLoading={ventasArticulos.loading} error={ventasArticulos.error}>
       <CardHeader>
         <CardTitle>Top 6 Productos Más Vendidos</CardTitle>
         <CardDescription>
@@ -70,7 +67,6 @@ export function TopProductsChart() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-4 ">
-        {/* Contenedor para los botones */}
         <div className="flex gap-2 justify-center">
           <button
             onClick={() => setSortBy("cantidad")}
@@ -94,14 +90,13 @@ export function TopProductsChart() {
           </button>
         </div>
 
-        {/* Contenedor del gráfico */}
         <div className="flex-1 h-full">
           <ChartContainer config={chartConfig} className="w-full h-full">
             <BarChart
               accessibilityLayer
               data={chartData}
               layout="vertical"
-              margin={{ left: 0, right: 10 }}
+              margin={{ left: 10, right: 10 }}
               className="w-full h-full"
             >
               <YAxis

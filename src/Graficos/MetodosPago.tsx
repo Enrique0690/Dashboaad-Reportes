@@ -143,23 +143,23 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export function PaymentMethodsChart() {
   const { dateRange } = useDateRange();
-  const { ventasFormasPago, ventasFormasPagoLoading, ventasFormasPagoError } = useReports();
-  const { data, chartConfig } = processData(ventasFormasPago, dateRange?.from, dateRange?.to);
+  const { ventasFormasPago } = useReports();
+  const { data, chartConfig } = processData(ventasFormasPago.data, dateRange?.from, dateRange?.to);
 
   return (
-    <Card className="w-full h-[500px] shadow-sm border border-gray-200 flex flex-col">
-      <DataStatusHandler isLoading={ventasFormasPagoLoading} error={ventasFormasPagoError}>
-        <CardHeader className="items-center w-full text-center -mb-8">
+    <Card className="w-full h-full shadow-sm border border-gray-200 flex flex-col">
+      <DataStatusHandler isLoading={ventasFormasPago.loading} error={ventasFormasPago.error}>
+        <CardHeader className="items-center w-full text-center -mb-10">
           <CardTitle className="text-lg font-semibold">Métodos de Pago</CardTitle>
           <CardDescription className="text-sm text-gray-500">
             Distribución por tipo de pago
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="flex-1 flex flex-col items-center justify-center gap-4 p-4">
-          <div className="w-full h-[250px] flex justify-center">
+        <CardContent className="flex-1 flex flex-col gap-2 p-4">
+          <div className="flex-1 w-full min-h-[200px]">
             <ChartContainer config={chartConfig} className="w-full h-full">
-              <PieChart width={250} height={150}>
+              <PieChart width={400} height={400}>
                 <ChartTooltip content={<CustomTooltip />} />
                 <Pie
                   data={data}
@@ -173,17 +173,17 @@ export function PaymentMethodsChart() {
             </ChartContainer>
           </div>
 
-          <div className="w-full flex flex-wrap justify-center gap-4">
+          <div className="w-full flex flex-wrap justify-center gap-2">
             {data.map((item) => (
-              <div key={item.metodo} className="flex items-center gap-2">
+              <div key={item.metodo} className="flex items-center gap-1 px-2 py-1">
                 <div
-                  className="w-4 h-4 rounded-sm"
+                  className="w-3 h-3 rounded-sm flex-shrink-0"
                   style={{ backgroundColor: item.fill }}
                 />
-                <span className="text-sm">
+                <span className="text-xs whitespace-nowrap">
                   {chartConfig[item.metodo]?.label || item.metodo}
                 </span>
-                <span className="text-sm text-gray-500">
+                <span className="text-xs text-gray-500 whitespace-nowrap">
                   ({item.porcentaje.toFixed(1)}%)
                 </span>
               </div>

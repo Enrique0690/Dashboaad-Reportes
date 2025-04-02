@@ -21,9 +21,9 @@ const formatCurrency = (value: number) => {
 
 const formatFullName = (fullName: string) => {
   return fullName
-    .split(' ') 
-    .filter((part) => part.trim() !== '') 
-    .join(' '); 
+    .split(' ')
+    .filter((part) => part.trim() !== '')
+    .join(' ');
 };
 
 const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
@@ -55,69 +55,59 @@ const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
 };
 
 export function UserSalesChart() {
-  const { ventas, ventasanterior, ventasLoading, ventasanteriorLoading, ventasError, ventasanteriorError } = useReports();
-  const isLoading = ventasLoading && ventasanteriorLoading;
-  const error = ventasError && ventasanteriorError;
+  const { ventas, ventasanterior } = useReports();
+  const isLoading = ventas.loading || ventasanterior.loading;
+  const error = ventas.error || ventasanterior.error;
 
   const processData = (ventas: any[], ventasanterior: any[]) => {
     const users: Record<string, { actual: number; anterior: number }> = {};
 
     ventas.forEach((venta) => {
       const usuario = venta.usuario || 'Sin especificar';
-      if (!users[usuario]) {
-        users[usuario] = { actual: 0, anterior: 0 };
-      }
+      if (!users[usuario]) users[usuario] = { actual: 0, anterior: 0 };
       users[usuario].actual += venta.total;
     });
 
     ventasanterior.forEach((venta) => {
       const usuario = venta.usuario || 'Sin especificar';
-      if (!users[usuario]) {
-        users[usuario] = { actual: 0, anterior: 0 };
-      }
+      if (!users[usuario]) users[usuario] = { actual: 0, anterior: 0 };
       users[usuario].anterior += venta.total;
     });
 
-    const sortedUsers = Object.entries(users)
-      .sort(([, a], [, b]) => b.actual - a.actual)
+    return Object.entries(users)
       .map(([usuario, { actual, anterior }]) => ({
         usuario: formatFullName(usuario),
         totalVentasActual: actual,
         totalVentasAnterior: anterior,
-      }));
-
-    return {
-      usersData: sortedUsers,
-      totalGeneralActual: sortedUsers.reduce((sum, user) => sum + user.totalVentasActual, 0),
-      totalGeneralAnterior: sortedUsers.reduce((sum, user) => sum + user.totalVentasAnterior, 0),
-    };
+      }))
+      .sort((a, b) => b.totalVentasActual - a.totalVentasActual);
   };
 
-  const { usersData } = processData(ventas, ventasanterior);
+  const usersData = processData(ventas.data, ventasanterior.data);
+  const maxVisibleUsers = 6;
+  const userHeight = 50;
+  const minContainerHeight = Math.max(usersData.length * userHeight, maxVisibleUsers * userHeight);
 
   return (
-    <Card className="w-full h-[500px] flex flex-col">
+    <Card className="h-[500px] flex flex-col">
       <DataStatusHandler isLoading={isLoading} error={error}>
-        <CardHeader className="pb-3">
+        <CardHeader>
           <CardTitle>Ventas por Usuario</CardTitle>
           <CardDescription>Distribución de ventas por responsable</CardDescription>
         </CardHeader>
-        
-        <CardContent className="flex-1 overflow-y-auto p-1">
-          <div className="relative w-full h-full">
+
+        <CardContent className="flex-1 overflow-y-auto"> 
+          <div className="relative w-full h-full" style={{ minHeight: `${minContainerHeight}px` }}> 
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={usersData}
+                data={usersData} 
                 layout="vertical"
-                margin={{ top: 20, right: 30, left: -50, bottom: 5 }} 
+                margin={{ top: 10, right: 30, left: -50, bottom: 10 }}
+                barCategoryGap="35%"
+                barGap={5}
               >
                 <CartesianGrid horizontal={false} />
-                <XAxis
-                  type="number"
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={value => formatNumber(value)}
-                />
+                <XAxis type="number" domain={[0, "dataMax"]} tickFormatter={formatNumber} />
                 <YAxis
                   dataKey="usuario"
                   type="category"
@@ -125,34 +115,13 @@ export function UserSalesChart() {
                   axisLine={false}
                   width={140}
                   tick={{ fontSize: 12 }}
-                  tickFormatter={value => 
-                    value.length > 15 ? `${value.substring(0, 12)}...` : value
-                  }
+                  tickFormatter={(value) => (value.length > 15 ? `${value.substring(0, 12)}...` : value)}
                 />
-                <ChartTooltip
-                  cursor={false}
-                  content={<CustomTooltip />}
-                />
-                <Bar
-                  dataKey="totalVentasActual"
-                  fill={COLORES.actual}
-                  radius={[0, 4, 4, 0]}
-                  barSize={20}
-                >
-                  <LabelList
-                    dataKey="totalVentasActual"
-                    position="right"
-                    formatter={(value: number) => formatNumber(value)}
-                    fontSize={12}
-                    fill={COLORES.actual}
-                  />
+                <ChartTooltip cursor={false} content={<CustomTooltip />} />
+                <Bar dataKey="totalVentasActual" fill={COLORES.actual} radius={[0, 4, 4, 0]} barSize={30}>
+                  <LabelList dataKey="totalVentasActual" position="right" formatter={formatNumber} fontSize={12} fill={COLORES.actual} />
                 </Bar>
-                <Bar
-                  dataKey="totalVentasAnterior"
-                  fill={COLORES.anterior}
-                  radius={[0, 4, 4, 0]}
-                  barSize={20}
-                />
+                <Bar dataKey="totalVentasAnterior" fill={COLORES.anterior} radius={[0, 4, 4, 0]} barSize={30} />
               </BarChart>
             </ResponsiveContainer>
           </div>
