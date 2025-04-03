@@ -31,9 +31,6 @@ export function TotalEfectivoCard() {
   const efectivoAumento = diferenciaEfectivo > 0;
   const efectivoDisminuyo = diferenciaEfectivo < 0;
   const diferenciaTransacciones = ventasValidas.length - ventasAnteriorValidas.length;
-  console.log(ventasValidas.length);
-  console.log(ventasAnteriorValidas.length);
-  console.log(diferenciaTransacciones);
 
   return (
     <Card className="w-full h-full">

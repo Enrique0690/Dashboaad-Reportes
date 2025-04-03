@@ -29,12 +29,6 @@ export function TotalVentasCard() {
   const diferenciaVentas = totalVentas - totalVentasAnterior;
   const ventasAumentaron = diferenciaVentas > 0;
   const ventasDisminuyeron = diferenciaVentas < 0;
-  console.log("Ventas actuales:", ventas.data);
-console.log("Ventas anteriores:", ventasanterior.data);
-console.log("Ventas actuales filtradas:", ventasValidas);
-console.log("Ventas anteriores filtradas:", ventasAnteriorValidas);
-console.log("Diferencia de ventas:", diferenciaVentas);
-
 
   return (
     <Card className="w-full h-full">

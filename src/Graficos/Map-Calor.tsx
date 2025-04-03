@@ -23,7 +23,7 @@ export function BusinessActivityHeatmap() {
 
     ventas.data.forEach((venta) => {
       const fecha = new Date(venta.fechaCreacion);
-      const day = fecha.getDay(); 
+      const day = (fecha.getDay() + 6) % 7;
       const hour = fecha.getHours();
 
       if (!data[hour]) {
