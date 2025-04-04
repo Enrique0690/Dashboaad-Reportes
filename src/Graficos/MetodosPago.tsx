@@ -98,7 +98,7 @@ const processData = (
           metodo: "otros",
           cantidad: 0,
           montoTotal: 0,
-          fill: "#d1d5db", // Color gris para "Otros"
+          fill: "#d1d5db", 
           porcentaje: 0,
         };
         dynamicConfig.otros = {
@@ -208,7 +208,7 @@ export function PaymentMethodsChart() {
   return (
     <Card className="w-full h-full shadow-sm border border-gray-200 flex flex-col">
       <DataStatusHandler isLoading={ventasFormasPago.loading} error={ventasFormasPago.error}>
-        <CardHeader className="items-center w-full text-center">
+        <CardHeader className="items-center w-full -mb-5">
           <div className="flex justify-between items-center w-full">
             <div className="flex-1">
               <CardTitle className="text-lg font-semibold">Métodos de Pago</CardTitle>
@@ -234,24 +234,8 @@ export function PaymentMethodsChart() {
           </div>
         </CardHeader>
 
-        <CardContent className="flex-1 flex flex-col gap-2 p-4">
-          <div className="flex-1 w-full min-h-[200px]">
-            <ChartContainer config={chartConfig} className="w-full h-full">
-              <PieChart width={400} height={400}>
-                <ChartTooltip content={<CustomTooltip />} />
-                <Pie
-                  data={data}
-                  dataKey="montoTotal"
-                  nameKey="metodo"
-                  innerRadius="50%"
-                  outerRadius="80%"
-                  stroke="none"
-                />
-              </PieChart>
-            </ChartContainer>
-          </div>
-
-          <div className="w-full flex justify-center">
+        <CardContent className="flex-1 flex flex-col gap-2 -mb-10">
+          <div className="w-full flex justify-start">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
@@ -264,12 +248,12 @@ export function PaymentMethodsChart() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent 
-                className="w-full max-w-[400px] p-0 bg-white border border-gray-200 shadow-xl rounded-lg overflow-hidden"
-                align="center"
-                side="top"
+                className="w-full max-w-[300px] p-0 bg-white border border-gray-200 shadow-xl rounded-lg overflow-hidden"
+                align="start"
+                side="left"
               >
-                <div className="max-h-[300px] overflow-y-auto p-4 custom-scrollbar">
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                <div className="max-h-[300px] overflow-y-auto p-2 custom-scrollbar">
+                  <div className="space-y-3">
                     {data.map((item) => (
                       <div key={item.metodo} className="flex items-start gap-3">
                         <div
@@ -295,6 +279,21 @@ export function PaymentMethodsChart() {
                 </div>
               </TooltipContent>
             </Tooltip>
+          </div>
+          <div className="flex-1 w-full min-h-[200px]">
+            <ChartContainer config={chartConfig} className="w-full h-full">
+              <PieChart width={400} height={400}>
+                <ChartTooltip content={<CustomTooltip />} />
+                <Pie
+                  data={data}
+                  dataKey="montoTotal"
+                  nameKey="metodo"
+                  innerRadius="50%"
+                  outerRadius="80%"
+                  stroke="none"
+                />
+              </PieChart>
+            </ChartContainer>
           </div>
         </CardContent>
       </DataStatusHandler>

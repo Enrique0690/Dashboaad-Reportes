@@ -20,8 +20,8 @@ interface ColorGeneratorOptions {
   
     constructor(options: ColorGeneratorOptions = {}) {
       this.options = {
-        saturationRange: [65, 90],  // Rango más ajustado
-        lightnessRange: [50, 70],   // Luminosidad media
+        saturationRange: [65, 90],  
+        lightnessRange: [50, 70],  
         shuffle: false,
         ...options
       };
@@ -30,14 +30,12 @@ interface ColorGeneratorOptions {
     public generateColors(count: number): string[] {
       const colors: string[] = [];
       
-      // Primero usamos los colores base en orden
       for (const color of this.baseColors) {
         if (colors.length >= count) break;
         colors.push(color);
         this.usedColors.add(color);
       }
   
-      // Si necesitamos más colores, generamos complementarios
       if (colors.length < count) {
         const baseHues = this.baseColors.map(c => this.hexToHsl(c)[0]);
         const additionalColors = this.generateComplementaryColors(
@@ -56,15 +54,14 @@ interface ColorGeneratorOptions {
       const [sMin, sMax] = this.options.saturationRange!;
       const [lMin, lMax] = this.options.lightnessRange!;
   
-      // Generamos colores complementarios basados en los colores base
       for (let i = 0; i < count; i++) {
         const baseHue = baseHues[i % baseHues.length];
-        const hueVariation = 30 + (i * 15); // Variación progresiva
+        const hueVariation = 30 + (i * 15)
         
         // Alternamos entre colores análogos y complementarios
         const hue = (baseHue + (i % 2 === 0 ? hueVariation : -hueVariation + 180)) % 360;
-        const saturation = sMin + (sMax - sMin) * 0.7; // Saturación alta pero consistente
-        const lightness = lMin + (lMax - lMin) * 0.5; // Luminosidad media
+        const saturation = sMin + (sMax - sMin) * 0.7; 
+        const lightness = lMin + (lMax - lMin) * 0.5; 
         
         const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
         colors.push(color);
