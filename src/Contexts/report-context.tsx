@@ -15,6 +15,10 @@ interface ReportContextType {
   ventasanterior: ReportState;
   ventasFormasPagoAnterior: ReportState;
   usuarios: any[];
+  fechaInicioActual: Date | null;
+  fechaFinActual: Date | null;
+  fechaInicioAnterior: Date | null;
+  fechaFinAnterior: Date | null;
 }
 
 const initialState: ReportState = { data: [], loading: false, error: null };
@@ -25,7 +29,11 @@ const ReportContext = createContext<ReportContextType>({
   ventasFormasPago: initialState,
   ventasanterior: initialState,
   ventasFormasPagoAnterior: initialState,
-  usuarios: []
+  usuarios: [],
+  fechaInicioActual: null,
+  fechaFinActual: null,
+  fechaInicioAnterior: null,
+  fechaFinAnterior: null,
 });
 
 export function ReportProvider({ children }: { children: React.ReactNode }) {
@@ -42,6 +50,11 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
   const [ventasanterior, setVentasanterior] = useState<ReportState>(initialState);
   const [ventasFormasPagoAnterior, setVentasFormasPagoAnterior] = useState<ReportState>(initialState);
   const [usuarios, setUsuarios] = useState<any[]>([]);
+  const [fechaInicioActual, setFechaInicioActual] = useState<Date | null>(null);
+  const [fechaFinActual, setFechaFinActual] = useState<Date | null>(null);
+  const [fechaInicioAnterior, setFechaInicioAnterior] = useState<Date | null>(null);
+  const [fechaFinAnterior, setFechaFinAnterior] = useState<Date | null>(null);
+
 
   useEffect(() => {
     if (!dateRange?.from || !dateRange?.to || !urlServicio) return;
@@ -51,6 +64,10 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
       const currentEnd = new Date(dateRange.to!);
       const rangeDuration = currentEnd.getTime() - currentStart.getTime();
       const previousStart = new Date(currentStart.getTime() - rangeDuration);
+      setFechaInicioActual(currentStart);
+      setFechaFinActual(currentEnd);
+      setFechaInicioAnterior(previousStart);
+      setFechaFinAnterior(currentStart);
 
       const PeridoCombinado = {
         desde: `${previousStart.toISOString().split('T')[0]} 00:00`,
@@ -157,7 +174,7 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
   }, []);
   
   return (
-    <ReportContext.Provider value={{ ventas, ventasArticulos, ventasFormasPago, ventasanterior, ventasFormasPagoAnterior, usuarios }}>
+    <ReportContext.Provider value={{ ventas, ventasArticulos, ventasFormasPago, ventasanterior, ventasFormasPagoAnterior, usuarios, fechaInicioActual, fechaFinActual, fechaInicioAnterior, fechaFinAnterior }}>
       {children}
     </ReportContext.Provider>
   );

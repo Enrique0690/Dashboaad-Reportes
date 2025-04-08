@@ -5,39 +5,39 @@ import { useReports } from '@/Contexts/report-context';
 import { DataStatusHandler } from '@/utils/DataStatusHandler';
 import { useState, useEffect } from 'react';
 import { RoleFilter } from '@/components/rolFilter';
+import { formatDate, formatCurrency } from '@/components/formats';
 
 const COLORES = {
   actual: '#22c55e',
   anterior: '#c7db9c',
 };
 
-const formatCurrency = (value: number) => {
-  return value.toLocaleString('es-EC', {
-    style: 'currency',
-    currency: 'USD',
-  });
-};
-
-const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
+const CustomTooltip = ({ active, payload, fechaInicioActual, fechaFinActual, fechaInicioAnterior, fechaFinAnterior }: TooltipProps<number, string> & { fechaInicioActual: string, fechaFinActual: string, fechaInicioAnterior: string, fechaFinAnterior: string }) => {
   if (active && payload?.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-white p-3 rounded-md shadow-sm border border-gray-200">
-        <p className="font-medium text-green-800">{data.usuario}</p>
-        <div className="mt-2 space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[#22c55e]">●</span>
-            <span className="text-xs ml-2">Actual:</span>
-            <span className="text-xs font-semibold ml-2">
-              {formatCurrency(data.ticketPromedioActual)}
-            </span>
+      <div className="bg-white p-2 rounded-md shadow-sm border border-gray-200">
+        <p className="font-medium text-green-800 text-sm">{data.usuario}</p>
+        <div className="mt-1 space-y-1 text-xs">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center text-[#22c55e]">
+              <span className="text-xs">●</span>
+              <span className="ml-1">Actual</span>
+            </div>
+            <span className="ml-1">{formatCurrency(data.ticketPromedioActual)}</span>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-[#c7db9c]">●</span>
-            <span className="text-xs ml-2">Anterior:</span>
-            <span className="text-xs font-semibold ml-2">
-              {formatCurrency(data.ticketPromedioAnterior)}
-            </span>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center text-[#c7db9c]">
+              <span className="text-xs">●</span>
+              <span className="ml-1">Anterior</span>
+            </div>
+            <span className="ml-1">{formatCurrency(data.ticketPromedioAnterior)}</span>
+          </div>
+          <div className="mt-1 text-gray-500">
+            <span className="text-xs">Rango Actual: </span><span className="text-xs">{formatDate(fechaInicioActual)} - {formatDate(fechaFinActual)}</span>
+          </div>
+          <div className="text-gray-500">
+            <span className="text-xs">Rango Anterior: </span><span className="text-xs">{formatDate(fechaInicioAnterior)} - {formatDate(fechaFinAnterior)}</span>
           </div>
         </div>
       </div>
@@ -58,7 +58,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function TicketPromedioChart() {
-  const { ventas, ventasanterior, usuarios } = useReports();
+  const { ventas, ventasanterior, usuarios, fechaInicioActual, fechaFinActual, fechaInicioAnterior, fechaFinAnterior } = useReports();
   const error = ventas.error || ventasanterior.error;
   const isLoading = ventas.loading || ventasanterior.loading;
   const rolesUnicos = Array.from(new Set(usuarios.map((u) => u.nombreRol)));
@@ -167,7 +167,17 @@ export function TicketPromedioChart() {
                   fontSize={10}
                   height={80}
                 />
-                <ChartTooltip cursor={false} content={<CustomTooltip />} />
+                <ChartTooltip
+                  cursor={false}
+                  content={
+                    <CustomTooltip
+                      fechaInicioActual={fechaInicioActual?.toISOString() ?? ""}
+                      fechaFinActual={fechaFinActual?.toISOString() ?? ""}
+                      fechaInicioAnterior={fechaInicioAnterior?.toISOString() ?? ""}
+                      fechaFinAnterior={fechaFinAnterior?.toISOString() ?? ""}
+                    />
+                  }
+                />
                 <Bar
                   dataKey="ticketPromedioActual"
                   fill={COLORES.actual}
