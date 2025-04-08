@@ -47,7 +47,7 @@ const processData = (ventas: any[], startDate: Date, endDate: Date): ProcessedDa
     const saleDate = new Date(venta.fechaCreacion);
     const dateKey = formatDate(saleDate);
     if (dateMap.has(dateKey)) {
-      dateMap.set(dateKey, dateMap.get(dateKey)! + venta.total);
+      dateMap.set(dateKey, dateMap.get(dateKey)! + venta.baseIva);
     }
   });
 
@@ -133,7 +133,7 @@ export function WeeklySalesComparison() {
                   axisLine={false}
                   angle={-45}
                   textAnchor="end"
-                  tickMargin={35} // Aumentamos espacio para ticks
+                  tickMargin={35}
                   interval={dateInterval}
                   style={{
                     fontSize: '0.75rem', 

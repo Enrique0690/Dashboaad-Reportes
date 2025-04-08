@@ -52,7 +52,7 @@ const processData = (
 
     const metodoRaw = venta.FormaPago || "Otro";
     const metodoKey = normalizeMethod(metodoRaw);
-    const monto = typeof venta.monto === "number" ? venta.monto : 0;
+    const monto = typeof venta.baseIva === "number" ? venta.baseIva : 0;
     
     if (!metodos[metodoKey]) {
       metodos[metodoKey] = {
