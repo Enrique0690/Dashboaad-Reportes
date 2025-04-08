@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ChartTooltip } from "@/components/ui/chart";
 import { useReports } from '@/Contexts/report-context';
 import { DataStatusHandler } from "@/utils/DataStatusHandler";
+import { useState, useEffect } from "react";
+import { RoleFilter } from "@/components/rolFilter";
 
 const COLORES = {
   actual: '#22c55e',
@@ -55,23 +57,45 @@ const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
 };
 
 export function UserSalesChart() {
-  const { ventas, ventasanterior } = useReports();
+  const { ventas, ventasanterior, usuarios } = useReports();
   const isLoading = ventas.loading || ventasanterior.loading;
   const error = ventas.error || ventasanterior.error;
+  const rolesUnicos = Array.from(new Set(usuarios.map((u) => u.nombreRol)));
+  const [rolesSeleccionados, setRolesSeleccionados] = useState<string[]>(() => {
+    const stored = localStorage.getItem("rolesSeleccionadosPromedioSalonero");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch { }
+    }
+    return rolesUnicos;
+  });
+  useEffect(() => {
+    localStorage.setItem("rolesSeleccionadosPromedioSalonero", JSON.stringify(rolesSeleccionados));
+  }, [rolesSeleccionados]);
 
   const processData = (ventas: any[], ventasanterior: any[]) => {
     const users: Record<string, { actual: number; anterior: number }> = {};
 
     ventas.forEach((venta) => {
       const usuario = venta.usuario || 'Sin especificar';
+      const usuarioObj = usuarios.find((u) => u.nombre === usuario);
+      if (!usuarioObj || !rolesSeleccionados.includes(usuarioObj.nombreRol)) return;
+
       if (!users[usuario]) users[usuario] = { actual: 0, anterior: 0 };
-      users[usuario].actual += venta.total;
+      users[usuario].actual += (venta.baseIva ?? 0) + (venta.base0 ?? 0);
     });
 
     ventasanterior.forEach((venta) => {
       const usuario = venta.usuario || 'Sin especificar';
+      const usuarioObj = usuarios.find((u) => u.nombre === usuario);
+      if (!usuarioObj || !rolesSeleccionados.includes(usuarioObj.nombreRol)) return;
+
       if (!users[usuario]) users[usuario] = { actual: 0, anterior: 0 };
-      users[usuario].anterior += venta.total;
+      users[usuario].anterior += (venta.baseIva ?? 0) + (venta.base0 ?? 0);
     });
 
     return Object.entries(users)
@@ -91,18 +115,29 @@ export function UserSalesChart() {
   return (
     <Card className="h-[500px] flex flex-col">
       <DataStatusHandler isLoading={isLoading} error={error}>
-        <CardHeader>
-          <CardTitle>Ventas por Usuario</CardTitle>
-          <CardDescription>Distribución de ventas por responsable</CardDescription>
+        <CardHeader className="items-center w-full -mb-5">
+          <div className="flex justify-between items-center w-full">
+            <div className="flex-1">
+              <CardTitle className="text-lg font-semibold">Ventas por Usuario</CardTitle>
+              <CardDescription className="text-sm text-gray-500">
+                Distribución de ventas por responsable
+              </CardDescription>
+            </div>
+            <RoleFilter
+              roles={rolesUnicos}
+              selectedRoles={rolesSeleccionados}
+              onChange={setRolesSeleccionados}
+            />
+          </div>
         </CardHeader>
 
-        <CardContent className="flex-1 overflow-y-auto"> 
-          <div className="relative w-full h-full" style={{ minHeight: `${minContainerHeight}px` }}> 
+        <CardContent className="flex-1 overflow-y-auto">
+          <div className="relative w-full h-full" style={{ minHeight: `${minContainerHeight}px` }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={usersData} 
+                data={usersData}
                 layout="vertical"
-                margin={{ top: 10, right: 30, left: -50, bottom: 10 }}
+                margin={{ top: 10, right: 50, left: -50, bottom: 10 }}
                 barCategoryGap="35%"
                 barGap={5}
               >

@@ -14,6 +14,7 @@ interface ReportContextType {
   ventasFormasPago: ReportState;
   ventasanterior: ReportState;
   ventasFormasPagoAnterior: ReportState;
+  usuarios: any[];
 }
 
 const initialState: ReportState = { data: [], loading: false, error: null };
@@ -24,6 +25,7 @@ const ReportContext = createContext<ReportContextType>({
   ventasFormasPago: initialState,
   ventasanterior: initialState,
   ventasFormasPagoAnterior: initialState,
+  usuarios: []
 });
 
 export function ReportProvider({ children }: { children: React.ReactNode }) {
@@ -39,6 +41,7 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
   const [ventasFormasPago, setVentasFormasPago] = useState<ReportState>(initialState);
   const [ventasanterior, setVentasanterior] = useState<ReportState>(initialState);
   const [ventasFormasPagoAnterior, setVentasFormasPagoAnterior] = useState<ReportState>(initialState);
+  const [usuarios, setUsuarios] = useState<any[]>([]);
 
   useEffect(() => {
     if (!dateRange?.from || !dateRange?.to || !urlServicio) return;
@@ -124,8 +127,37 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
     fetchReports();
   }, [dateRange, urlServicio, idUsuario, deviceID]);
 
+  useEffect(() => {
+    if (!urlServicio) return;
+  
+    const fetchUsuariosYRoles = async () => {
+      try {
+        const usuariosRes = await fetch(`${urlServicio.replace('REPORTES', 'LOCAL_NETWORK')}/USUARIO/GET`);
+        const rolesRes = await fetch(`${urlServicio.replace('REPORTES', 'LOCAL_NETWORK')}/ROLES/GET`);
+  
+        const usuariosData = await usuariosRes.json();
+        const rolesData = await rolesRes.json();
+        const rolesMap = new Map(
+          (Array.isArray(rolesData) ? rolesData : [])
+            .filter(r => r.habilitado)
+            .map(r => [r.id, r.nombre])
+        );
+  
+        const usuariosConRol = (Array.isArray(usuariosData) ? usuariosData : []).map((usuario: any) => ({
+          ...usuario,
+          nombreRol: rolesMap.get(usuario.idRol) || 'SIN ROL'
+        }));
+        setUsuarios(usuariosConRol);
+      } catch (err) {
+        console.error('Error cargando usuarios o roles', err);
+      }
+    };
+  
+    fetchUsuariosYRoles();
+  }, []);
+  
   return (
-    <ReportContext.Provider value={{ ventas, ventasArticulos, ventasFormasPago, ventasanterior, ventasFormasPagoAnterior }}>
+    <ReportContext.Provider value={{ ventas, ventasArticulos, ventasFormasPago, ventasanterior, ventasFormasPagoAnterior, usuarios }}>
       {children}
     </ReportContext.Provider>
   );

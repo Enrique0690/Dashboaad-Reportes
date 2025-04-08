@@ -5,7 +5,7 @@ import { ChartConfig, ChartContainer, ChartTooltip } from "@/components/ui/chart
 import { useReports } from "@/Contexts/report-context";
 import { DataStatusHandler } from "@/utils/DataStatusHandler";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -52,7 +52,7 @@ const processData = (
 
     const metodoRaw = venta.FormaPago || "Otro";
     const metodoKey = normalizeMethod(metodoRaw);
-    const monto = typeof venta.baseIva === "number" ? venta.baseIva : 0;
+    const monto = (typeof venta.baseIva === "number" ? venta.baseIva : 0) + (typeof venta.base0 === "number" ? venta.base0 : 0);
     
     if (!metodos[metodoKey]) {
       metodos[metodoKey] = {
@@ -192,8 +192,15 @@ const generateViewOptions = (totalMethods: number) => {
 export function PaymentMethodsChart() {
   const { dateRange } = useDateRange();
   const { ventasFormasPago } = useReports();
-  const [maxMethodsToShow, setMaxMethodsToShow] = useState<number>(5);
   const [colorGenerator] = useState(() => new ColorGenerator());
+  const [maxMethodsToShow, setMaxMethodsToShow] = useState<number>(() => {
+    const stored = localStorage.getItem("maxMethodsToShow");
+    return stored ? parseInt(stored) : 5;
+  });
+  
+  useEffect(() => {
+    localStorage.setItem("maxMethodsToShow", maxMethodsToShow.toString());
+  }, [maxMethodsToShow]);
   
   const { data, chartConfig, totalMethods } = processData(
     ventasFormasPago.data, 

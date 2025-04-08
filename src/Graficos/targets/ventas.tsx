@@ -23,7 +23,7 @@ export function TotalVentasCard() {
   const totalVentasAnterior = ventasAnteriorValidas.length;
 
   // Cálculo del valor total de ventas
-  const valorTotalVentas = ventasValidas.reduce((sum, venta) => sum + (venta.baseIva ?? 0), 0);
+  const valorTotalVentas = ventasValidas.reduce((sum, venta) => sum + (venta.baseIva ?? 0) + (venta.base0 ?? 0), 0);
 
   // Diferencia de ventas
   const diferenciaVentas = totalVentas - totalVentasAnterior;

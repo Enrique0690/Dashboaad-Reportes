@@ -47,7 +47,7 @@ const processData = (ventas: any[], startDate: Date, endDate: Date): ProcessedDa
     const saleDate = new Date(venta.fechaCreacion);
     const dateKey = formatDate(saleDate);
     if (dateMap.has(dateKey)) {
-      dateMap.set(dateKey, dateMap.get(dateKey)! + venta.baseIva);
+      dateMap.set(dateKey, dateMap.get(dateKey)! + (venta.baseIva + venta.base0));
     }
   });
 

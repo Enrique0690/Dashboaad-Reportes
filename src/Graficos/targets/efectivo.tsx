@@ -20,11 +20,11 @@ export function TotalEfectivoCard() {
       })
     : [];
   const totalEfectivo = ventasValidas.reduce((sum, venta) => {
-    const monto = typeof venta.baseIva === 'number' ? venta.baseIva : 0;
+    const monto = (typeof venta.baseIva === "number" ? venta.baseIva : 0) + (typeof venta.base0 === "number" ? venta.base0 : 0);
     return sum + monto;
   }, 0);
   const totalEfectivoAnterior = ventasAnteriorValidas.reduce((sum, venta) => {
-    const monto = typeof venta.baseIva === 'number' ? venta.baseIva : 0;
+    const monto = (typeof venta.baseIva === "number" ? venta.baseIva : 0) + (typeof venta.base0 === "number" ? venta.base0 : 0);
     return sum + monto;
   }, 0);
   const diferenciaEfectivo = totalEfectivo - totalEfectivoAnterior;
