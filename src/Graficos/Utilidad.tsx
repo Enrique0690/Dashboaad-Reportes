@@ -2,18 +2,10 @@ import { Bar, BarChart, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartConfig, ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { useReports } from "@/Contexts/report-context";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { DataStatusHandler } from "@/utils/DataStatusHandler";
-
-const COLORS = [
-  "#2563eb",
-  "#60a5fa",
-  "#22c55e",
-  "#facc15",
-  "#f97316",
-  "#9333ea",
-  "#d1d5db",
-];
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ColorGenerator } from "@/components/generateDistincColors";
 
 const chartConfig = {
   cantidad: {
@@ -74,7 +66,18 @@ const CustomYAxisTick = ({ x, y, payload }: any) => {
 export function TopProductsChart() {
   const { ventasArticulos } = useReports();
   const [sortBy, setSortBy] = useState<"cantidad" | "neto">("cantidad");
+  const [colors, setColors] = useState<string[]>([]);
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const colorGenerator = useRef(new ColorGenerator());
+  const [maxProductsToShow, setMaxProductsToShow] = useState<number>(() => {
+    const stored = localStorage.getItem("maxProductsToShow");
+    return stored ? parseInt(stored) : 5;
+  });
+  
+  useEffect(() => {
+    localStorage.setItem("maxProductsToShow", maxProductsToShow.toString());
+  }, [maxProductsToShow]);
+  
 
   const processData = (ventas: any[]) => {
     const products: Record<string, { cantidad: number; neto: number }> = {};
@@ -90,32 +93,57 @@ export function TopProductsChart() {
 
     const sortedProducts = Object.entries(products)
       .sort(([, a], [, b]) => (sortBy === "cantidad" ? b.cantidad - a.cantidad : b.neto - a.neto))
-      .slice(0, 6)
+      .slice(0, maxProductsToShow)
       .map(([producto, { cantidad, neto }], index) => ({
         producto,
         cantidad,
         neto,
-        fill: COLORS[index % COLORS.length],
+        fill: colors[index] || "#2563eb", 
       }));
 
     return sortedProducts;
   };
+  useEffect(() => {
+    const newColors = colorGenerator.current.generateColors(maxProductsToShow);
+    setColors(newColors);
+  }, [maxProductsToShow]);
 
   const chartData = processData(ventasArticulos.data);
+  const chartHeight = Math.max(chartData.length * 50, 300); // Mínimo 300px, 50px por barra
 
   return (
     <Card className="w-full h-full flex flex-col">
       <DataStatusHandler isLoading={ventasArticulos.loading} error={ventasArticulos.error}>
-        <CardHeader>
-          <CardTitle>Top 6 Productos Más Vendidos</CardTitle>
-          <CardDescription>
-            {sortBy === "cantidad"
-              ? "Clasificados por cantidad vendida"
-              : "Clasificados por total neto"}
-          </CardDescription>
+        <CardHeader className="items-center w-full -mb-3">
+          <div className="flex justify-between items-center w-full">
+            <div className="flex-1">
+              <CardTitle className="text-lg font-semibold">Top Productos Más Vendidos</CardTitle>
+              <CardDescription className="text-sm text-gray-500">
+                {sortBy === "cantidad"
+                  ? "Clasificados por cantidad vendida"
+                  : "Clasificados por total neto"}
+              </CardDescription>
+            </div>
+            <Select 
+              value={maxProductsToShow.toString()}
+              onValueChange={(value: string) => setMaxProductsToShow(parseInt(value))}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Número de Productos" />
+              </SelectTrigger>
+              <SelectContent>
+                {[5, 10, 15, 20].map((value) => (
+                  <SelectItem key={value} value={value.toString()}>
+                    {value} Productos
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
+
         <CardContent className="flex-1 flex flex-col gap-4">
-          <div className="flex gap-2 justify-center">
+          <div className="flex gap-2 justify-center -mb-2">
             <button
               onClick={() => setSortBy("cantidad")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -138,41 +166,48 @@ export function TopProductsChart() {
             </button>
           </div>
 
-          <div className="flex-1 h-full relative" ref={chartContainerRef}>
-            <ChartContainer config={chartConfig} className="w-full h-full">
-              <BarChart
-                accessibilityLayer
-                data={chartData}
-                layout="vertical"
-                margin={{ left: 10, right: 10, top: 5, bottom: 5 }}
-                className="w-full h-full"
-              >
-                <YAxis
-                  dataKey="producto"
-                  type="category"
-                  tickLine={false}
-                  tickMargin={0}
-                  axisLine={false}
-                  width={110} 
-                  tick={<CustomYAxisTick />}
-                />
-                <XAxis
-                  dataKey={sortBy}
-                  type="number"
-                  hide
-                />
-                <ChartTooltip
-                  cursor={false}
-                  content={<CustomTooltipContent sortBy={sortBy} />}
-                />
-                <Bar
-                  dataKey={sortBy}
+          <div 
+            className="flex-1 overflow-y-auto"
+            style={{ maxHeight: '350px' }}
+            ref={chartContainerRef}
+          >
+            <div style={{ height: `${chartHeight}px` }}>
+              <ChartContainer config={chartConfig} className="w-full h-full">
+                <BarChart
+                  accessibilityLayer
+                  data={chartData}
                   layout="vertical"
-                  radius={5}
-                  fill={chartData[0]?.fill}
-                />
-              </BarChart>
-            </ChartContainer>
+                  margin={{ left: 10, right: 10, top: 5, bottom: 5 }}
+                  width={chartContainerRef.current?.clientWidth || 500}
+                  height={chartHeight}
+                >
+                  <YAxis
+                    dataKey="producto"
+                    type="category"
+                    tickLine={false}
+                    tickMargin={0}
+                    axisLine={false}
+                    width={110} 
+                    tick={<CustomYAxisTick />}
+                  />
+                  <XAxis
+                    dataKey={sortBy}
+                    type="number"
+                    hide
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<CustomTooltipContent sortBy={sortBy} />}
+                  />
+                  <Bar
+                    dataKey={sortBy}
+                    layout="vertical"
+                    radius={5}
+                    fill={chartData[0]?.fill}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </div>
           </div>
         </CardContent>
       </DataStatusHandler>
