@@ -69,6 +69,7 @@ export function TopProductsChart() {
   const [colors, setColors] = useState<string[]>([]);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const colorGenerator = useRef(new ColorGenerator());
+  const uniqueProductsCount = new Set(ventasArticulos.data.map(v => v.descripcion)).size;
   const [maxProductsToShow, setMaxProductsToShow] = useState<number>(() => {
     const stored = localStorage.getItem("maxProductsToShow");
     return stored ? parseInt(stored) : 5;
@@ -77,7 +78,8 @@ export function TopProductsChart() {
   useEffect(() => {
     localStorage.setItem("maxProductsToShow", maxProductsToShow.toString());
   }, [maxProductsToShow]);
-  
+  const productOptions = [5, 10, 15, 20].filter(value => value <= uniqueProductsCount);
+  if (productOptions.length === 0) productOptions.push(uniqueProductsCount); 
 
   const processData = (ventas: any[]) => {
     const products: Record<string, { cantidad: number; neto: number }> = {};
@@ -109,7 +111,7 @@ export function TopProductsChart() {
   }, [maxProductsToShow]);
 
   const chartData = processData(ventasArticulos.data);
-  const chartHeight = Math.max(chartData.length * 50, 300); // Mínimo 300px, 50px por barra
+  const chartHeight = Math.max(chartData.length * 50, 300);
 
   return (
     <Card className="w-full h-full flex flex-col">
@@ -132,11 +134,11 @@ export function TopProductsChart() {
                 <SelectValue placeholder="Número de Productos" />
               </SelectTrigger>
               <SelectContent>
-                {[5, 10, 15, 20].map((value) => (
-                  <SelectItem key={value} value={value.toString()}>
-                    {value} Productos
-                  </SelectItem>
-                ))}
+              {productOptions.map((value) => (
+                <SelectItem key={value} value={value.toString()}>
+                  {value} Productos
+                </SelectItem>
+              ))}
               </SelectContent>
             </Select>
           </div>

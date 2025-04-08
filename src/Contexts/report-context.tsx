@@ -149,8 +149,8 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
   
     const fetchUsuariosYRoles = async () => {
       try {
-        const usuariosRes = await fetch(`${urlServicio.replace('REPORTES', 'LOCAL_NETWORK')}/USUARIO/GET`);
-        const rolesRes = await fetch(`${urlServicio.replace('REPORTES', 'LOCAL_NETWORK')}/ROLES/GET`);
+        const usuariosRes = await fetch(new URL("LOCAL_NETWORK/USUARIO/GET", urlServicio).toString());
+        const rolesRes = await fetch(new URL("LOCAL_NETWORK/ROLES/GET", urlServicio).toString());
   
         const usuariosData = await usuariosRes.json();
         const rolesData = await rolesRes.json();
