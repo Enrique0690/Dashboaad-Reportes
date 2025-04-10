@@ -51,16 +51,25 @@ const processData = (ventas: any[], startDate: Date, endDate: Date): ProcessedDa
     }
   });
 
-  return Array.from(dateMap.entries()).map(([fecha, periodoActual]) => ({
+return Array.from(dateMap.entries()).map(([fecha, periodoActual]) => {
+  const [day, month, year] = fecha.split('-');
+  const localDate = new Date(
+    parseInt(year),
+    parseInt(month) - 1, 
+    parseInt(day)
+  );
+
+  return {
     fecha,
-    nombreCompleto: new Date(fecha.split('-').reverse().join('-')).toLocaleDateString('es-ES', {
+    nombreCompleto: localDate.toLocaleDateString('es-ES', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     }),
     periodoActual
-  }));
+  };
+});
 };
 
 const getDateInterval = (startDate: Date, endDate: Date): number => {
