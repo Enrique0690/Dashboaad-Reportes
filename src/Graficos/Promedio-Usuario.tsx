@@ -20,15 +20,15 @@ const CustomTooltip = ({ active, payload, fechaInicioActual, fechaFinActual, fec
         <p className="font-medium text-green-800 text-sm">{data.usuario}</p>
         <div className="mt-1 space-y-1 text-xs">
           <div className="flex justify-between items-center">
-            <div className="flex items-center text-[#22c55e]">
-              <span className="text-xs">●</span>
+            <div className="flex items-center">
+              <span className="text-xs text-[#22c55e]">●</span>
               <span className="ml-1">Actual</span>
             </div>
             <span className="ml-1">{formatCurrency(data.ticketPromedioActual)}</span>
           </div>
           <div className="flex justify-between items-center">
-            <div className="flex items-center text-[#c7db9c]">
-              <span className="text-xs">●</span>
+            <div className="flex items-center">
+              <span className="text-xs text-[#c7db9c]">●</span>
               <span className="ml-1">Anterior</span>
             </div>
             <span className="ml-1">{formatCurrency(data.ticketPromedioAnterior)}</span>
