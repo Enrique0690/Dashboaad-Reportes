@@ -83,12 +83,12 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
         endpoint: string,
         fechas: { desde: string; hasta: string },
         setCurrentState: React.Dispatch<SetStateAction<ReportState>>,
-        setPreviousState?: React.Dispatch<SetStateAction<ReportState>> 
+        setPreviousState?: React.Dispatch<SetStateAction<ReportState>>
       ) => {
         try {
           setCurrentState(prev => ({ ...prev, loading: true, error: null }));
           if (setPreviousState) setPreviousState(prev => ({ ...prev, loading: true, error: null }));
-      
+
           const formData = {
             datetime: 1,
             desde: fechas.desde,
@@ -100,18 +100,27 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
               fecha: new Date().toISOString(),
             },
           };
-      
+
           const url = new URL(`LOCAL_NETWORK/REPORTES/${endpoint}`, urlServicio).toString();
           const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData),
           });
-      
+
           if (!response.ok) throw new Error('Error en la respuesta del servidor');
-      
-          const data = await response.json();
-      
+
+          let data = await response.json();
+          data = data.filter((item: any) => {
+            const estado = (item.estado ?? item.Estado ?? "")
+              .toString()
+              .toUpperCase();
+            const documento = (item.documento ?? item.Documento ?? "")
+              .toString()
+              .toUpperCase();
+            return estado === "ACTIVO" && (documento === "NOTA DE ENTREGA" || documento === "FACTURA");
+          });
+
           if (setPreviousState) {
             const dataActual = data.filter((item: { fechaCreacion: any; fechaEmision: any }) => {
               const fecha = new Date(item.fechaCreacion || item.fechaEmision);
@@ -121,7 +130,7 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
               const fecha = new Date(item.fechaCreacion || item.fechaEmision);
               return fecha >= previousStart && fecha < currentStart;
             });
-  
+
             setCurrentState({ data: dataActual, loading: false, error: null });
             setPreviousState({ data: dataAnterior, loading: false, error: null });
           } else {
@@ -133,7 +142,7 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
             setPreviousState({ data: [], loading: false, error: error instanceof Error ? error.message : 'Error desconocido' });
           }
         }
-      };      
+      };
       await Promise.allSettled([
         fetchCombinedData('VENTAS', PeridoCombinado, setVentas, setVentasanterior),
         fetchCombinedData('VENTAS_FORMASPAGO', PeridoCombinado, setVentasFormasPago, setVentasFormasPagoAnterior),
@@ -146,12 +155,12 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!urlServicio) return;
-  
+
     const fetchUsuariosYRoles = async () => {
       try {
         const usuariosRes = await fetch(new URL("LOCAL_NETWORK/USUARIO/GET", urlServicio).toString());
         const rolesRes = await fetch(new URL("LOCAL_NETWORK/ROLES/GET", urlServicio).toString());
-  
+
         const usuariosData = await usuariosRes.json();
         const rolesData = await rolesRes.json();
         const rolesMap = new Map(
@@ -159,7 +168,7 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
             .filter(r => r.habilitado)
             .map(r => [r.id, r.nombre])
         );
-  
+
         const usuariosConRol = (Array.isArray(usuariosData) ? usuariosData : []).map((usuario: any) => ({
           ...usuario,
           nombreRol: rolesMap.get(usuario.idRol) || 'SIN ROL'
@@ -169,10 +178,10 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
         console.error('Error cargando usuarios o roles', err);
       }
     };
-  
+
     fetchUsuariosYRoles();
   }, []);
-  
+
   return (
     <ReportContext.Provider value={{ ventas, ventasArticulos, ventasFormasPago, ventasanterior, ventasFormasPagoAnterior, usuarios, fechaInicioActual, fechaFinActual, fechaInicioAnterior, fechaFinAnterior }}>
       {children}

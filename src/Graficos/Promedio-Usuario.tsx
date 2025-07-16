@@ -77,7 +77,7 @@ export function TicketPromedioChart() {
     const usuariosData: Record<string, { totalVentasActual: number; totalPaxActual: number; totalVentasAnterior: number; totalPaxAnterior: number }> = {};
 
     ventas.forEach((venta) => {
-      const usuario = venta.usuario || 'Sin especificar';
+      const usuario = venta.mesero || 'Sin especificar';
       const usuarioObj = usuarios.find((u) => u.nombre === usuario);
       if (!usuarioObj || !rolesSeleccionados.includes(usuarioObj.nombreRol)) return;
 
@@ -93,7 +93,7 @@ export function TicketPromedioChart() {
     });
 
     ventasanterior.forEach((venta) => {
-      const usuario = venta.usuario || 'Sin especificar';
+      const usuario = venta.mesero || 'Sin especificar';
       const usuarioObj = usuarios.find((u) => u.nombre === usuario);
       if (!usuarioObj || !rolesSeleccionados.includes(usuarioObj.nombreRol)) return;
 
@@ -127,7 +127,7 @@ export function TicketPromedioChart() {
         <CardHeader className="items-center w-full -mb-5">
           <div className="flex justify-between items-center w-full">
             <div className="flex-1">
-              <CardTitle className="text-lg font-semibold">Ticket Promedio por Usuario</CardTitle>
+              <CardTitle className="text-lg font-semibold">Ticket Promedio por Mesero</CardTitle>
               <CardDescription className="text-sm text-gray-500">
                 Comparación del período actual vs. anterior
               </CardDescription>
