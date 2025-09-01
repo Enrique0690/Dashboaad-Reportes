@@ -56,7 +56,7 @@ function calcularConsumoPromedio(ventas: any) {
   const totalPax = ventas.reduce((sum: number, venta: any) => sum + (venta.pax > 0 ? venta.pax : 1), 0);
   if (totalPax === 0) return 0;
 
-  const totalConsumo = ventas.reduce((sum: number, venta: any) => sum + (venta.baseIva + venta.base0), 0);
+  const totalConsumo = ventas.reduce((sum: number, venta: any) => sum + (venta.monto), 0);
 
   return totalConsumo / totalPax;
 }
